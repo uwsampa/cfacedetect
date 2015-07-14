@@ -56,10 +56,8 @@ int main() {
 	fclose(fp);*/
 	xmlDocPtr doc;
 	xmlXPathObjectPtr result;
-	//xmlNodeSetPtr nodeset;
-	char *xpath;
+	xmlChar *xpath;
 	char buf[256];
-	//xmlChar *keyword;
 
 	unsigned i;
 	doc = xmlParseFile("5x5.xml");
@@ -72,21 +70,19 @@ int main() {
 
 	Stage* stages = (Stage *)malloc(sizeof(Stage) * stageNum);
 
+
+	//result = getNodeset(doc, (xmlChar *)"/opencv_storage/cascade/stages/_[2]/stageThreshold");
+	//printf("%s\n", (char *)result->nodesetval->nodeTab[0]->xmlChildrenNode->content);
+
 	for (i = 0; i < stageNum; i++) {
-		sprintf(buf, "%s%d%s", "opencv-storage/cascade/stages/_[", i+1, "]/stageThreshold");
-		printf("%s\n", buf);
-		xpath = (char *)&buf;
-		result = getNodeset(doc, (xmlChar *)xpath);
+		sprintf(buf, "%s%d%s", "/opencv_storage/cascade/stages/_[", i+1, "]/stageThreshold");
+		xpath = (xmlChar *)&buf;
+		printf("%s\n", (char *)xpath);
+		result = getNodeset(doc, xpath);
 		printf("%d: %s\n", i+1, (char *)result->nodesetval->nodeTab[0]->xmlChildrenNode->content);
 		xmlXPathFreeObject(result);
 	}
-	/*if(result) {
-		//nodeset = result->nodesetval;
-		for(i = 0; i < result->nodesetval->nodeNr; i++) {
-			printf("keyword: %d\n", result->nodesetval->nodeNr);//(char *)result->nodesetval->nodeTab[i]->xmlChildrenNode->content);
-		}
-				
-	}*/
+	
 	free(stages);
 
 	xmlFreeDoc(doc);
