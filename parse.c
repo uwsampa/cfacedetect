@@ -1,9 +1,12 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "parse.h"
 #include <libxml2/libxml/parser.h>
 #include <libxml2/libxml/xpath.h>
+
+#define VALUE(X) (char *)X->nodesetval->nodeTab[0]->xmlChildrenNode->content
 
 xmlXPathObjectPtr getnodeset (xmlDocPtr doc, xmlChar *xpath) {
 	
@@ -29,167 +32,133 @@ xmlXPathObjectPtr getnodeset (xmlDocPtr doc, xmlChar *xpath) {
 	return result;
 }
 
-Cascade loadCascade(char* path) {
+void freeCascade(Cascade* cas) {
+	int i;
+	for(i = 0; i < cas->stgNum; i++) {
+		free(cas->stages[i].nodeList);
+	}
+	for(i = 0; i < cas->featNum; i++) {
+		free(cas->features[i].rectList);
+	}
+	free(cas->stages);
+	free(cas->features);
+	free(cas);
+}
+
+ Cascade* loadCascade(char* path) {
 	xmlDocPtr doc;
 	xmlXPathObjectPtr result;
 	
 	doc = xmlParseFile(path);
-	if(doc == NULL) {
-		printf("xml path not found\n");
-		return 0;
+	if(!doc) {
+		printf("Error: xml path not found\n");
+		return NULL;
 	}
 
-	unsigned stageNum;
-	unsigned featureNum;
+	int stageNum;
+	int featureNum;
 
-	Stage* stages;
-	Feature* features;
+	Stage* stages = NULL;
+	Feature* features = NULL;
 
-	result = getnodeset(doc, (xmlChar *)"opencv_storage/cascade/stageNum/_");
+	result = getnodeset(doc, (xmlChar *)"/opencv_storage/cascade/stages/_");
 	stageNum = result->nodesetval->nodeNr;
 	stages = (Stage *)malloc(sizeof(Stage) * stageNum);
 	xmlXPathFreeObject(result);
 
-	result = getnodeset(doc, (xmlChar *)"opencv_storage/cascade/features/_");
+	result = getnodeset(doc, (xmlChar *)"/opencv_storage/cascade/features/_");
 	featureNum = result->nodesetval->nodeNr;
 	features = (Feature *)malloc(sizeof(Feature) * featureNum);
 	xmlXPathFreeObject(result);
 
-	result = getnodeset(doc, (xmlChar *)"opencv_storage/cascade/height");
-	Cascade cas = {atoi((char *)result->nodesetval->nodeTab[0]->xmlChildrenNode->content), stages, features};
+	result = getnodeset(doc, (xmlChar *)"/opencv_storage/cascade/height");
+	Cascade* cas = (Cascade *)malloc(sizeof(Cascade));
+	cas->dim = atoi(VALUE(result));
+	cas->stgNum = stageNum;
+	cas->featNum = featureNum;
+	cas->stages = stages;
+	cas->features = features;
 	xmlXPathFreeObject(result);
 
-	xmlChar *xpath;
-	//first process the stage and its nodes
-	unsigned i, j;
+
+	char xpath[256];
+	//first process the stage and its nodes, done
+	int i, j;
 
 	for(i = 0; i < stageNum; i++) {
-		xpath = (xmlChar *)"opencv-storage/cascade/stages/_[" + (i+1) + "]/stageThreshold";
-		result = getnodeset(doc, xpath);
-		stages[i]->threshold = atof((char *)result->nodesetval->nodeTab[0]->xmlChildrenNode->content);
-		for(j = 0; j < ?(variable, depends on how many nodes per stage); j++) {
-	//now can access stages as an array
-		}
+		//stage threshold
+		sprintf(xpath, "%s%d%s", "/opencv_storage/cascade/stages/_[", i+1, "]/stageThreshold");
+		result = getnodeset(doc, (xmlChar *)&xpath);
+		stages[i].threshold = atof((char *)result->nodesetval->nodeTab[0]->xmlChildrenNode->content);
 		xmlXPathFreeObject(result);
+		//nodes in each stage
+		sprintf(xpath, "%s%d%s", "/opencv_storage/cascade/stages/_[", i+1, "]/maxWeakCount");
+		result = getnodeset(doc, (xmlChar *)&xpath);
+		int nodeNum = atoi((char *)result->nodesetval->nodeTab[0]->xmlChildrenNode->content);
+		xmlXPathFreeObject(result);
+		stages[i].nodeList = (Node *)malloc(sizeof(Node) * nodeNum);
+		for (j = 0; j < nodeNum; j++) {
+			//for node featind and threshold
+			sprintf(xpath, "%s%d%s%d%s", "/opencv_storage/cascade/stages/_[", i+1, "]/weakClassifiers/_[", j+1, "]/internalNodes");
+			result = getnodeset(doc, (xmlChar *)&xpath);
+			char *line = VALUE(result);
+			strtok(line, " ");
+			strtok(NULL, " ");
+			strtok(NULL, " ");
+			stages[i].nodeList[j].featind = atoi(strtok(NULL, " "));
+			stages[i].nodeList[j].threshold = atof(strtok(NULL, ""));
+			xmlXPathFreeObject(result);
+			//for tree value
+			sprintf(xpath, "%s%d%s%d%s", "/opencv_storage/cascade/stages/_[", i+1, "]/weakClassifiers/_[", j+1, "]/leafValues");
+			result = getnodeset(doc, (xmlChar *)&xpath);
+			line = VALUE(result);
+			strtok(line, " ");
+			stages[i].nodeList[j].weights[0] = atof(strtok(NULL, " "));
+			stages[i].nodeList[j].weights[1] = atof(strtok(NULL, ""));
+			xmlXPathFreeObject(result);
+		}
 	}
 
-	//second process the feature
-/*	unsigned k, l;
+	//second process the feature, done
+	int k, l;
 
 	for (k = 0; k < featureNum; k++) {
-		for (l = 0; l < ?(depends on how many rects); l++) {
-
+		//see how many rects in each feature
+		features[k].id = k;
+		sprintf(xpath, "%s%d%s", "/opencv_storage/cascade/features/_[", k+1, "]/rects/_");
+		result = getnodeset(doc, (xmlChar *)&xpath);
+		int rectNum = result->nodesetval->nodeNr;
+		xmlXPathFreeObject(result);
+		features[k].rectList = (Rect *)malloc(sizeof(Rect) * rectNum);
+		for (l = 0; l < rectNum; l++) {
+			//construct each rects for feature's rectlist
+			sprintf(xpath, "%s%d%s%d%s", "/opencv_storage/cascade/features/_[", k+1, "]/rects/_[", l+1, "]");
+			result = getnodeset(doc, (xmlChar *)xpath);
+			char *line = VALUE(result);
+			strtok(line, " ");
+			features[k].rectList[l].width = atoi(strtok(NULL, " "));
+			features[k].rectList[l].height = atoi(strtok(NULL, " "));
+			features[k].rectList[l].x = atoi(strtok(NULL, " "));
+			features[k].rectList[l].y = atoi(strtok(NULL, " "));
+			features[k].rectList[l].weight = atoi(strtok(NULL, "."));
+			xmlXPathFreeObject(result);
 		}
 	}
 
-	/*
-	Stage curstage;//those can be local variable instead of global
-	node curnode;
-	
-	unsigned fcount = 0;//not sure if this is necessary
-	int total_features;//this also maybe deleted
-	bool ins = FALSE;
-	bool inr = FALSE;
-	bool nf = FALSE;
-	bool ns = FALSE;
-	size_t len = 0;
-	char* line = NULL;
-	ssize_t read;
-
-	//first process the stage
-
-	/*while(getline(&line, &len, fp) != -1) {
-
-		if (strstr(line, "<stages") != NULL) {
-			ins = TRUE;
-			inr = FALSE;
-			continue;
-		}
-		if (strstr(line, "<features") != NULL) {
-			ins = FALSE;
-			inr = TRUE;
-			nf = TRUE;
-			continue;
-		}
-
-		if (ins) {
-			if (ns) {
-				strtok(line, ">");
-    			int num = atoi(strtok(NULL, "<"));
-				curstage = {0.0, num, NULL);//when reference change here, if already appended to stages will it erase the stage before?
-				ns = FALSE;
-
-			} else if (strstr(line, "stageThreshold") != NULL) {
-				char* c = strtok(line, ">");
-				curstage.threshold = atof(strtok(NULL, "<"));
-
-			} else if (strstr(line, "/internalNodes") != NULL) {
-					strtok(line, " ");
-					strtok(NULL, " ");
-					int featind = atoi(strtok(NULL, " "));
-					float threshold = atof(strtok(NULL, "<"));
-					curnode = {threshold, featind, [0.0, 0.0]};
-
-			} else if (strstr(line, "/leafValues") != NULL) {
-					curnode.weights[0] = atof(strtok(line, " "));
-					curnode.weights[1] = atof(strtok(line, "<"));
-					curstage.node_list.append(curr_node)//how should i append the nodes?
-			}
-
-			if (strstr(line, "<_>") != NULL) { 
-				if (len(line.split(" ")) == 5) {//not sure if necessary
-					ns = TRUE;
-				}
-
-			} else if (strstr(line, "</_>") != NULL) {
-				if (strstr(line, "</_></weakClassifiers></_>") != NULL) {
-					stages.append(curr_stage);
-				}
-			}
-
-		} else if (inRects) {
-			if (strstr(line, "<_>") != NULL || strstr(line, "<rects>") != NULL) {
-				continue;
-			}
-				
-			if (nf) {
-				nf = FALSE;
-					//otherway to initialize curr_rectlist = []
-			}
-			if (strstr(line, "</_>") != NULL) {
-				int width = strtok(line, " ");
-				int height = strtok(NULL, " ");
-				int x = strtok(NULL, " ");
-				int y = strtok(NULL, " ");
-				int weight = strtok(NULL, ".");
-				rect currect = {width, height, x, y, weight};
-				rect* rectlist.append(currect) 
-				if (strstr(line, "</_></rects></_>") != NULL) {
-					Feature curfeat = {fcount, rectlist};
-					features.append(curfeat)
-					fcount++;
-					nf = TRUE;
-				}
-
-			} else if (strstr(line, "</opencv_storage>") != NULL) {
-				continue;
-			}
-
-		} else {
-				// pre processing
-				if (strstr(line, "height") != NULL) {
-					// wow seriously
-					strtok(line, ">");
-					cas.dim = atoi(strtok(NULL, "<"));
-				}
-				if (strstr(line, "</maxWeakCount></stageParams>") {
-					strtok(line, ">");
-					total_features = atoi(strtok(NULL, "<"));
-				}
-		}
-	} */
 	xmlFreeDoc(doc);
 	xmlCleanupParser();
 	return cas;
-
 }
+
+/*
+int main() {
+	Cascade* casPtr = loadCascade("5x5.xml");
+	if (!casPtr) {
+		printf("loadCascade failed\n");
+	} else {
+		printf("%d\n", casPtr->features[0].rectList[0].x);
+	}
+	freeCascade(casPtr);
+	return 0;
+}
+*/

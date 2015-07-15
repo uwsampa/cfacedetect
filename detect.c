@@ -1,11 +1,11 @@
 
 #include <stdio.h>
 #include <math.h>
-#include "fann.h"
+//#include "fann.h"
 #include "rgb_image.h"
 #include "parse.h"
 
-#define INFILE "lena.png"
+#define INPIC "lena.png"
 #define STAGE 22
 #define SIZEOF(array) sizeof(array) / sizeof(array[0])
 #define min(X, Y)  ((X) < (Y) ? (X) : (Y))
@@ -13,25 +13,27 @@
 
 //need to figure out how to load rbg image
 
-faces = [] //what array? array of window sizes? guess as [x,y,?]
+//faces = [] //what array? array of window sizes? guess as [x,y,?]
 
-int main(int argc, char* argv[]) {
-	RgbImage srcImage;
-	initRgbImage(&srcImage);
+void grayscale(RgbImage* image) {
+    int i;
+    int j;
+    float luminance;
 
-	if (argc == 1) {
-		
-		loadRgbImage(argv[0], &srcImage);
-	} else {
-		loadRgbImage(INPIC, &srcImage);
-	}
-	makeGrayscale(&srcImage);
+    for(i = 0; i < image->h; i++) {
+        for(j = 0; j < image->w; j++) {
+            luminance =
+                0.299 * image->pixels[i][j].r +
+                0.587 * image->pixels[i][j].g +
+                0.114 * image->pixels[i][j].b;
 
-	//somewhere need to freeRgbImage(&scrImage);
-
-	return 0;
+            image->pixels[i][j].r = luminance;
+            image->pixels[i][j].g = luminance;
+            image->pixels[i][j].b = luminance;
+        }
+    }
 }
-
+/*
 float[][] integral(float[][] pxls, bool isSquared) {
 	float integral[width][height]; //use pxls to figure out dimension
 	unsigned x, y;
@@ -132,10 +134,10 @@ void detectSingleScale(img?, float[][] integral, float[][] integralsq, classifie
 	for (y = 0; y < height - window; y++) {
 		for (x = 0; x < width - window; x++) {
 
-		/*	fit = []
+			fit = []
 			pix = np.array(img)
 			fit = shrink(pix, x, y, window, defined_size, downsp)
-		*/
+		
 			float mean = getMean(intimg, x, y,window,area)
 			float variance = getVariance(intimgsq, x, y, mean,window,area)
 
@@ -163,9 +165,9 @@ void detectSingleScale(img?, float[][] integral, float[][] integralsq, classifie
 					}
 
 				if (stagePassThresh < stage->threshold) {
-					/*if (zerocount < onecount)
+					if (zerocount < onecount)
 						printPix(fit, 0, filePath)
-						zerocount = zerocount + 1*/
+						zerocount = zerocount + 1
 					break;
 				}
 				
@@ -175,28 +177,52 @@ void detectSingleScale(img?, float[][] integral, float[][] integralsq, classifie
 					faces.append([window, x, y])
 				}
 
-}
+}*/
 
-void detectMultiScale(img, pxls, classifier, features, window, filePath) {
-	int width = img.size[0]; //maybe avoid img? only use pxls is enough
-	int height = img.size[1];
+void detectMultiScale(RgbImage* pxls, Cascade* classifier, char* filePath) {
+	int width = pxls->w; //maybe avoid img? only use pxls is enough
+	int height = pxls->h;
 	int max_window = min(width, height);
-	float[][] integral = integral(pxls, FALSE);
-	float[][] integralsq = integral(pxls, TRUE);
+	//RgbImage integral = integral(pxls, FALSE);
+	//RgbImage integralsq = integral(pxls, TRUE);
+	printf("%d, %d, %d\n", width, height, max_window);
 
-	bounds = window
-	float scale = 1
-	while bounds < max_window:
-		bounds = bounds * 1.25
-		scale = scale * 1.25
-		detectSingleScale(img, int_img, int_img_sq, classifier, features, (int)bounds, scale, filePath)
-
-	int diff = 1;
-	while diff > 0 {
-		diff = mergeRectangles();
+	float bounds = classifier->dim;
+	float scale = 1.0;
+	while (bounds < max_window) {
+		bounds = bounds * 1.25;
+		scale = scale * 1.25;
+		//detectSingleScale(img, int_img, int_img_sq, classifier, features, (int)bounds, scale, filePath)
 	}
+	//int diff = 1;
+	//while (diff > 0) {
+	//	diff = mergeRectangles();
+	//}
 	//printf(faces); maybe a to string method
 	//printf("total faces = %d!\n", len(faces));
 }
 
 
+int main(int argc, char* argv[]) {
+	RgbImage srcImage;
+	initRgbImage(&srcImage);
+
+	if (argc == 1) {
+		
+		loadRgbImage(argv[0], &srcImage);
+	} else {
+		loadRgbImage(INPIC, &srcImage);
+	}
+	grayscale(&srcImage);
+
+	Cascade* cas = loadCascade("5x5.xml");//ocv_clsfr.xml");
+	
+	if(!cas) {
+		detectMultiScale(&srcImage, cas, "script.txt");
+		freeCascade(cas);
+	}
+
+	freeRgbImage(&srcImage);
+
+	return 0;
+}

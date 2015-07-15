@@ -30,12 +30,16 @@ typedef struct Stage{
 
 typedef struct Cascade{
 	int dim;
+	int stgNum;
+	int featNum;
 	Stage* stages;
 	Feature* features;
 }Cascade;
 
 
 
-//Cascade* loadCascade(char* path);
+Cascade* loadCascade(char* path);
+
+void freeCascade(Cascade *cas);
 
 #endif
