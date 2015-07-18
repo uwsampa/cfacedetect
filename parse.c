@@ -43,6 +43,7 @@ void freeCascade(Cascade* cas) {
 	free(cas->stages);
 	free(cas->features);
 	free(cas);
+	printf("Cascade freed.\n");
 }
 
  Cascade* loadCascade(char* path) {
@@ -50,7 +51,7 @@ void freeCascade(Cascade* cas) {
 	xmlXPathObjectPtr result;
 	
 	doc = xmlParseFile(path);
-	if(!doc) {
+	if(doc == NULL) {
 		printf("Error: xml path not found\n");
 		return NULL;
 	}
@@ -95,6 +96,7 @@ void freeCascade(Cascade* cas) {
 		sprintf(xpath, "%s%d%s", "/opencv_storage/cascade/stages/_[", i+1, "]/maxWeakCount");
 		result = getnodeset(doc, (xmlChar *)&xpath);
 		int nodeNum = atoi((char *)result->nodesetval->nodeTab[0]->xmlChildrenNode->content);
+		stages[i].nodeNum = nodeNum;
 		xmlXPathFreeObject(result);
 		stages[i].nodeList = (Node *)malloc(sizeof(Node) * nodeNum);
 		for (j = 0; j < nodeNum; j++) {
@@ -128,6 +130,7 @@ void freeCascade(Cascade* cas) {
 		sprintf(xpath, "%s%d%s", "/opencv_storage/cascade/features/_[", k+1, "]/rects/_");
 		result = getnodeset(doc, (xmlChar *)&xpath);
 		int rectNum = result->nodesetval->nodeNr;
+		features[k].rectNum = rectNum;
 		xmlXPathFreeObject(result);
 		features[k].rectList = (Rect *)malloc(sizeof(Rect) * rectNum);
 		for (l = 0; l < rectNum; l++) {
@@ -147,6 +150,7 @@ void freeCascade(Cascade* cas) {
 
 	xmlFreeDoc(doc);
 	xmlCleanupParser();
+	printf("Cascade built.\n");
 	return cas;
 }
 

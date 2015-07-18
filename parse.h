@@ -13,6 +13,7 @@ typedef struct Rect{
 
 typedef struct Feature{
 	int id;
+	int rectNum;
 	Rect* rectList;
 }Feature;
 
@@ -24,7 +25,7 @@ typedef struct Node{
 
 typedef struct Stage{
 	float threshold;
-	int fsize;
+	int nodeNum;
 	Node* nodeList;
 }Stage;
 

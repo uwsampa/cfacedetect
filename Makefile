@@ -7,7 +7,7 @@ LIB = /usr/local/lib
 
 OBJS = rgb_image.o parse.o detect.o
 
-CFLAGS = -O3 -Wall
+CFLAGS = -O3 -Wall -g -std=c11
 
 HEADERS = parse.h rgb_image.h
 
@@ -20,7 +20,7 @@ all: detect FORCE
 #	$(CC) $(CFLAGS) -I$(PATH) $(TARGET).c -o $(TARGET) $(LINK)
 
 detect: $(OBJS) FORCE
-	$(CC) $(CFLAGS) -o detect $(OBJS)
+	$(CC) $(CFLAGS) -o detect $(OBJS) -I$(SCPATH) -L$(LIB) $(LINK)
 
 detect.o: detect.c $(HEADERS) FORCE
 	$(CC) $(CFLAGS) -c $< -o detect.o

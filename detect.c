@@ -1,17 +1,21 @@
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 //#include "fann.h"
 #include "rgb_image.h"
 #include "parse.h"
 
-#define INPIC "lena.png"
-#define STAGE 22
-#define SIZEOF(array) sizeof(array) / sizeof(array[0])
+#define INPIC "Images/lena.rgb"
+//#define SIZEOF(array) sizeof(array) / sizeof(array[0])
 #define min(X, Y)  ((X) < (Y) ? (X) : (Y))
 #define max(X, Y)  ((X) > (Y) ? (X) : (Y))
 
-//need to figure out how to load rbg image
+typedef struct Face{
+	int window;
+	int x;
+	int y;
+}Face;
 
 //faces = [] //what array? array of window sizes? guess as [x,y,?]
 
@@ -27,60 +31,119 @@ void grayscale(RgbImage* image) {
                 0.587 * image->pixels[i][j].g +
                 0.114 * image->pixels[i][j].b;
 
-            image->pixels[i][j].r = luminance;
-            image->pixels[i][j].g = luminance;
-            image->pixels[i][j].b = luminance;
+            image->pixels[i][j].r = floor(luminance);
+            image->pixels[i][j].g = floor(luminance);
+            image->pixels[i][j].b = floor(luminance);
         }
     }
+    printf("Grayscaling done.\n");
 }
-/*
-float[][] integral(float[][] pxls, bool isSquared) {
-	float integral[width][height]; //use pxls to figure out dimension
-	unsigned x, y;
 
-	for (y = 0; y < height; y++) {
-		for (x = 0; x < width; x++) {
+RgbImage* summed(RgbImage* pxls, int isSquared) {
+	int i, c = 0;
 
-			int r = img_pxls[x, y][0];
-			int g = img_pxls[x, y][1];
-			int b = img_pxls[x, y][2];
-			float grays = floor(r * .299 + g * .587 + b * .114)
+	//Initialize and allocate for RgbImage
+	RgbImage* result = (RgbImage *)malloc(sizeof(RgbImage));
+	result->w = pxls->w;
+	result->h = pxls->h;
+	result->meta = NULL;
+
+	result->pixels = (RgbPixel**)malloc(pxls->h * sizeof(RgbPixel*));
+	if (result->pixels == NULL) {
+        printf("Warning: Oops! Cannot allocate memory for the pixels!\n");
+        return NULL;
+    }
+	for(i = 0; i < pxls->h; i++) {
+        result->pixels[i] = (RgbPixel*)malloc(pxls->w * sizeof(RgbPixel));
+        if (result->pixels[i] == NULL) {
+            c = 1;
+            break;
+        }
+    }
+	if (c == 1) {
+		printf("Warning: Oops! Cannot allocate memory for the pixels!\n");
+		for (i--; i >= 0; i--) {
+	    	free(result->pixels[i]);
+	    }
+		free(result->pixels);
+		free(result);
+		return NULL;
+	}
+	printf("Image allocated.\n");
+
+	//Integral Image
+	int x, y;
+
+	for (y = 0; y < pxls->h; y++) {
+		for (x = 0; x < pxls->w; x++) {
+			float l = floor(pxls->pixels[x][y].r);
 			if (isSquared) {
-				l = grays;
-			} else {
-				l = (grays)*(grays);
+				l = l * l;			
 			}
 			//for leftmost pixel, copy from orig
 			//TODO: is dividing by 255 correct? seems to give correct vals...
 			if (x == 0 && y == 0) {
-				integral[x][y] = l;
-
+				//integral[x][y] = l;
+				result->pixels[x][y].r = l;
+				result->pixels[x][y].g = l;
+				result->pixels[x][y].b = l;
 			} else if(x == 0) {
-				integral[x][y] = l + integral[x][y-1];
+				//integral[x][y] = l + integral[x][y-1];
+				result->pixels[x][y].r = l + result->pixels[x][y-1].r;
+				result->pixels[x][y].g = l + result->pixels[x][y-1].g;
+				result->pixels[x][y].b = l + result->pixels[x][y-1].b;
 			} else if (y == 0) {
-				integral[x][y] = l + integral[x-1][y];
+				//integral[x][y] = l + integral[x-1][y];
+				result->pixels[x][y].r = l + result->pixels[x-1][y].r;
+				result->pixels[x][y].g = l + result->pixels[x-1][y].g;
+				result->pixels[x][y].b = l + result->pixels[x-1][y].b;
 			} else {
-				integral[x][y] = l + integral[x][y-1] + integral[x-1][y] - integral[x-1][y-1];
+				//integral[x][y] = l + integral[x][y-1] + integral[x-1][y] - integral[x-1][y-1];
+				result->pixels[x][y].r = l + result->pixels[x][y-1].r + result->pixels[x-1][y].r - result->pixels[x-1][y-1].r;
+				result->pixels[x][y].g = l + result->pixels[x][y-1].g + result->pixels[x-1][y].g - result->pixels[x-1][y-1].g;
+				result->pixels[x][y].b = l + result->pixels[x][y-1].b + result->pixels[x-1][y].b - result->pixels[x-1][y-1].b;
 			}
+			//printf("%d %d: %f, %f, %f\n", x, y, result->pixels[x][y].r, result->pixels[x][y].g, result->pixels[x][y].b);
+		}
+	}
 
-	return integral;
-
-}
-
-float getVariance(float[][] integralsq, x, y, mean, window, area) {
-	return (integralsq[x][y] - integralsq[x+window][y] - integralsq[x][y+ window] + integralsq[x + window][y + window]) / area - mean * mean;
-
-	return variance
-}
-
-float getMean(float[][] integral, x, y, window, area) {
-	return (integral[x][y] - integral[x+window][y]- integral[x][y+ window] + integral[x + window][y + window]) / area;
-}
-
-float getFeatureVal() {
+	return result;
 
 }
 
+
+float getMean(RgbImage* integral, int x, int y, int window, int area) {
+	return (integral->pixels[x][y].r - integral->pixels[x+window][y].r- integral->pixels[x][y+ window].r 
+		+ integral->pixels[x + window][y + window].r) / area;
+}
+
+
+
+float getFeatureVal(RgbImage* integral, Feature feat, float scale, int x, int y) {
+	float totalFeatureVal = 0.0;
+	int i;
+	for (i = 0; i < feat.rectNum; i++) {
+		int rectx = (int)(feat.rectList[i].x * scale + 0.5);
+		int recty = (int)(feat.rectList[i].y * scale + 0.5);
+		int rectw = (int)(feat.rectList[i].width * scale + 0.5);
+		int recth = (int)(feat.rectList[i].height * scale + 0.5);
+
+		int w1x = min(x + rectx, integral->w - 1);
+		int w1y = min(y + recty, integral->h - 1);
+		int w2x = min(x + rectx + rectw, integral->w - 1);
+		int w2y = min(y + recty, integral->h - 1);
+		int w3x = min(x + rectx , integral->w - 1);
+		int w3y = min(y + recty + recth, integral->h - 1);
+		int w4x = min(x + rectx + rectw, integral->w - 1);
+		int w4y = min(y + recty + recth, integral->h - 1);
+
+		totalFeatureVal += feat.rectList[i].weight * ( integral->pixels[w1x][w1y].r 
+			- integral->pixels[w2x][w2y].r - integral->pixels[w3x][w3y].r + integral->pixels[w4x][w4y].r);
+	}
+	return totalFeatureVal;
+}
+
+/*
 int mergeRectangles() {
 	int diff = 0;
 	int i;
@@ -124,100 +187,119 @@ int mergeRectangles() {
 			}
 
 	return diff;
-}
+}*/
 
-void detectSingleScale(img?, float[][] integral, float[][] integralsq, classifier* classy, feature* features, int window, int scale) {
-	int width;
-	int height;
-	int area = window * window
-	unsigned y, x;
+void detectSingleScale(RgbImage* integral, RgbImage* integralsq, Cascade* classy, int window, float scale, char* filePath) {
+	int width = integral->w;
+	int height = integral->h;
+	int area = window * window;
+	int y, x;
 	for (y = 0; y < height - window; y++) {
 		for (x = 0; x < width - window; x++) {
 
-			fit = []
-			pix = np.array(img)
-			fit = shrink(pix, x, y, window, defined_size, downsp)
+			//fit = []
+			//pix = np.array(img)
+			//fit = shrink(pix, x, y, window, defined_size, downsp)
 		
-			float mean = getMean(intimg, x, y,window,area)
-			float variance = getVariance(intimgsq, x, y, mean,window,area)
+			float mean = getMean(integral, x, y, window, area);
+			float variance = getMean(integral, x, y, window, area) - (mean * mean);
 
-			float stdev;
+			float stdev = 1.0;
 
 			if (variance > 0) {
-				stdev = sqrt(variance)
+				stdev = sqrt(variance);
 			}
 
-			unsigned i, j;
-			for (i = 0; i < STAGE; i++) {
+			int i, j;
+			for (i = 0; i < classy->stgNum; i++) {
 				float stagePassThresh = 0.0;
 
-				for (j = 0; j < SIZEOF(classy[i]->list); j++) { 
-					feature = features[classy[i]->list[j].feat_ind];
+				for (j = 0; j < classy->stages[i].nodeNum; j++) { 
+					Feature feat = classy->features[classy->stages[i].nodeList[j].featind];
 
-					# sum in rectangle is D - B - C + A
-					total_feat_val = getFeatureVal(feature->rect_list, integral, scale, x, y, width, height);
+					//sum in rectangle is D - B - C + A
+					float totalFeatureVal = getFeatureVal(integral, feat, scale, x, y);
 					
-					if (total_feat_val/area < node.threshold*stdev) {
-						stagePassThresh += node->weights[0];
+					if (totalFeatureVal / area < classy->stages[i].nodeList[j].threshold * stdev) {
+						stagePassThresh += classy->stages[i].nodeList[j].weights[0];
 
 					} else { 
-						stagePassThresh += node->weights[1];
+						stagePassThresh += classy->stages[i].nodeList[j].weights[1];
 					}
+				}
 
-				if (stagePassThresh < stage->threshold) {
-					if (zerocount < onecount)
-						printPix(fit, 0, filePath)
-						zerocount = zerocount + 1
+				if (stagePassThresh < classy->stages[i].threshold) {
+					//if (zerocount < onecount)
+					//	printPix(fit, 0, filePath)
+					//	zerocount = zerocount + 1
 					break;
 				}
 				
-				if ( i + 1 == STAGE) {
+				if ( i + 1 == classy->stgNum) {
 					//printPix(fit, 1, filePath)
 					//onecount = onecount + 1
-					faces.append([window, x, y])
+					//faces.append([window, x, y])
+					printf("Potentially a face.\n");
 				}
-
-}*/
+			}
+		}
+	}
+}
 
 void detectMultiScale(RgbImage* pxls, Cascade* classifier, char* filePath) {
+	printf("In detectMultiScale.\n");
 	int width = pxls->w; //maybe avoid img? only use pxls is enough
 	int height = pxls->h;
 	int max_window = min(width, height);
-	//RgbImage integral = integral(pxls, FALSE);
-	//RgbImage integralsq = integral(pxls, TRUE);
-	printf("%d, %d, %d\n", width, height, max_window);
+
+	//test summed
+	RgbImage* integral = summed(pxls, 0);
+	RgbImage* integralsq = summed(pxls, 1);
+
+	//test getMean
+	//float mean = getMean(integral, 1, 2, 25, 625);
+	//float var = getMean(integral, 1, 2, 25, 625) - (mean * mean);
+	//printf("%f, %f\n", mean, var);
+
+	//test getFeatureVal and detectSingleScale
 
 	float bounds = classifier->dim;
 	float scale = 1.0;
 	while (bounds < max_window) {
 		bounds = bounds * 1.25;
 		scale = scale * 1.25;
-		//detectSingleScale(img, int_img, int_img_sq, classifier, features, (int)bounds, scale, filePath)
+		//printf("bounds: %d, scale: %f\n", (int)bounds, scale);
+		detectSingleScale(integral, integralsq, classifier, (int)bounds, scale, filePath);
 	}
+
 	//int diff = 1;
 	//while (diff > 0) {
 	//	diff = mergeRectangles();
 	//}
 	//printf(faces); maybe a to string method
 	//printf("total faces = %d!\n", len(faces));
+	freeRgbImage(integral);
+	freeRgbImage(integralsq);
 }
 
 
 int main(int argc, char* argv[]) {
 	RgbImage srcImage;
+
 	initRgbImage(&srcImage);
 
-	if (argc == 1) {
-		
-		loadRgbImage(argv[0], &srcImage);
+	if(argc > 1) {
+		loadRgbImage(argv[1], &srcImage);
 	} else {
 		loadRgbImage(INPIC, &srcImage);
 	}
+	
+
 	grayscale(&srcImage);
 
-	Cascade* cas = loadCascade("5x5.xml");//ocv_clsfr.xml");
+	Cascade* cas = loadCascade("xml/ocv_clsfr.xml");
 	
-	if(!cas) {
+	if(cas != NULL) {
 		detectMultiScale(&srcImage, cas, "script.txt");
 		freeCascade(cas);
 	}
