@@ -6,17 +6,21 @@
 #include "rgb_image.h"
 #include "parse.h"
 
-#define INPIC "Images/lena.rgb"
+#define INPIC "Images/gee.rgb"
 //#define SIZEOF(array) sizeof(array) / sizeof(array[0])
 #define min(X, Y)  ((X) < (Y) ? (X) : (Y))
 #define max(X, Y)  ((X) > (Y) ? (X) : (Y))
 
-typedef struct Face{
+typedef struct Face {
 	int window;
 	int x;
 	int y;
-}Face;
+	struct Face* next;
+} Face;
 
+Face* head;
+Face* tail;
+int count = 0;
 //faces = [] //what array? array of window sizes? guess as [x,y,?]
 
 void grayscale(RgbImage* image) {
@@ -113,7 +117,7 @@ RgbImage* summed(RgbImage* pxls, int isSquared) {
 
 
 float getMean(RgbImage* integral, int x, int y, int window, int area) {
-	return (integral->pixels[x][y].r - integral->pixels[x+window][y].r- integral->pixels[x][y+ window].r 
+	return (integral->pixels[x][y].r - integral->pixels[x + window][y].r- integral->pixels[x][y + window].r 
 		+ integral->pixels[x + window][y + window].r) / area;
 }
 
@@ -189,7 +193,7 @@ int mergeRectangles() {
 	return diff;
 }*/
 
-void detectSingleScale(RgbImage* integral, RgbImage* integralsq, Cascade* classy, int window, float scale, char* filePath) {
+void detectSingleScale(RgbImage* pxls, RgbImage* integral, RgbImage* integralsq, Cascade* classy, int window, float scale, char* filePath) {
 	int width = integral->w;
 	int height = integral->h;
 	int area = window * window;
@@ -203,6 +207,8 @@ void detectSingleScale(RgbImage* integral, RgbImage* integralsq, Cascade* classy
 		
 			float mean = getMean(integral, x, y, window, area);
 			float variance = getMean(integral, x, y, window, area) - (mean * mean);
+
+			printf("%d, %d: %f, %f\n", y, x, mean, variance);
 
 			float stdev = 1.0;
 
@@ -222,10 +228,11 @@ void detectSingleScale(RgbImage* integral, RgbImage* integralsq, Cascade* classy
 					
 					if (totalFeatureVal / area < classy->stages[i].nodeList[j].threshold * stdev) {
 						stagePassThresh += classy->stages[i].nodeList[j].weights[0];
-
 					} else { 
 						stagePassThresh += classy->stages[i].nodeList[j].weights[1];
 					}
+
+					printf("%d, %f, %f, %f\n", classy->stages[i].nodeList[j].featind, classy->stages[i].nodeList[j].threshold, stagePassThresh, totalFeatureVal);
 				}
 
 				if (stagePassThresh < classy->stages[i].threshold) {
@@ -239,6 +246,15 @@ void detectSingleScale(RgbImage* integral, RgbImage* integralsq, Cascade* classy
 					//printPix(fit, 1, filePath)
 					//onecount = onecount + 1
 					//faces.append([window, x, y])
+					if(tail->next == NULL) {
+						tail->next = (Face *)malloc(sizeof(Face));
+						tail = tail->next;
+					}
+					tail->window = window;
+					tail->x = x;
+					tail->y = y;
+					tail->next = NULL;
+					count++;
 					printf("Potentially a face.\n");
 				}
 			}
@@ -262,22 +278,36 @@ void detectMultiScale(RgbImage* pxls, Cascade* classifier, char* filePath) {
 	//printf("%f, %f\n", mean, var);
 
 	//test getFeatureVal and detectSingleScale
-
 	float bounds = classifier->dim;
 	float scale = 1.0;
 	while (bounds < max_window) {
 		bounds = bounds * 1.25;
 		scale = scale * 1.25;
+		head = (Face *)malloc(sizeof(Face));
+
+		head->window = 0;
+		head->x = 0;
+		head->y = 0;
+		head->next = NULL;
+
+		tail = head;
 		//printf("bounds: %d, scale: %f\n", (int)bounds, scale);
-		detectSingleScale(integral, integralsq, classifier, (int)bounds, scale, filePath);
+		detectSingleScale(pxls, integral, integralsq, classifier, (int)bounds, scale, filePath);
 	}
+
+	Face* cur = head->next;
+	while(cur != NULL) {
+		printf("[%d, %d, %d] | ", cur->window, cur->x, cur->y);
+		cur = cur->next;
+	}
+	printf("total faces = %d!\n", count);
 
 	//int diff = 1;
 	//while (diff > 0) {
 	//	diff = mergeRectangles();
 	//}
-	//printf(faces); maybe a to string method
-	//printf("total faces = %d!\n", len(faces));
+
+	//printf("%d, %d, %d, %d\n", integral->w, integral->h, integralsq->w, integralsq->h);
 	freeRgbImage(integral);
 	freeRgbImage(integralsq);
 }
