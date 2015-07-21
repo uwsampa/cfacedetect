@@ -8,8 +8,9 @@
 
 #define INPIC "Images/gee.rgb"
 //#define SIZEOF(array) sizeof(array) / sizeof(array[0])
-#define min(X, Y)  ((X) < (Y) ? (X) : (Y))
-#define max(X, Y)  ((X) > (Y) ? (X) : (Y))
+#define min(X, Y)  (X < Y) ? X : Y
+#define max(X, Y)  (X > Y) ? X : Y
+#define intf(X) (X - floor(X)) >= 0.5 ? floor(X) + 1 : floor(X)
 
 typedef struct Face {
 	int window;
@@ -38,6 +39,7 @@ void grayscale(RgbImage* image) {
             image->pixels[i][j].r = floor(luminance);
             image->pixels[i][j].g = floor(luminance);
             image->pixels[i][j].b = floor(luminance);
+           // printf("%d %d : %.1f\n", i, j, floor(luminance));
         }
     }
     printf("Grayscaling done.\n");
@@ -80,34 +82,39 @@ RgbImage* summed(RgbImage* pxls, int isSquared) {
 
 	for (y = 0; y < pxls->h; y++) {
 		for (x = 0; x < pxls->w; x++) {
-			float l = floor(pxls->pixels[x][y].r);
+			//printf("%d, %d: %f\n", y, x, floor(pxls->pixels[y][x].r));
+			float l = pxls->pixels[y][x].r;
+			//printf("%d %d : %.1f\n", y, x, l);
 			if (isSquared) {
 				l = l * l;			
 			}
 			//for leftmost pixel, copy from orig
 			//TODO: is dividing by 255 correct? seems to give correct vals...
 			if (x == 0 && y == 0) {
-				//integral[x][y] = l;
-				result->pixels[x][y].r = l;
-				result->pixels[x][y].g = l;
-				result->pixels[x][y].b = l;
-			} else if(x == 0) {
-				//integral[x][y] = l + integral[x][y-1];
-				result->pixels[x][y].r = l + result->pixels[x][y-1].r;
-				result->pixels[x][y].g = l + result->pixels[x][y-1].g;
-				result->pixels[x][y].b = l + result->pixels[x][y-1].b;
+				//integral[y][x] = l;
+				result->pixels[y][x].r = l;
+				result->pixels[y][x].g = l;
+				result->pixels[y][x].b = l;
 			} else if (y == 0) {
-				//integral[x][y] = l + integral[x-1][y];
-				result->pixels[x][y].r = l + result->pixels[x-1][y].r;
-				result->pixels[x][y].g = l + result->pixels[x-1][y].g;
-				result->pixels[x][y].b = l + result->pixels[x-1][y].b;
+				//integral[y][x] = l + integral[y-1][x];
+				result->pixels[y][x].r = l + result->pixels[y][x-1].r;
+				result->pixels[y][x].g = l + result->pixels[y][x-1].g;
+				result->pixels[y][x].b = l + result->pixels[y][x-1].b;
+				//printf("y == 0 : %.1f\n", result->pixels[y][x-1].r);
+			} else if (x == 0) {
+				//integral[y][x] = l + integral[y][x-1];
+				result->pixels[y][x].r = l + result->pixels[y-1][x].r;
+				result->pixels[y][x].g = l + result->pixels[y-1][x].g;
+				result->pixels[y][x].b = l + result->pixels[y-1][x].b;
+				//printf("x == 0 : %.1f\n", result->pixels[y-1][x].r);
 			} else {
-				//integral[x][y] = l + integral[x][y-1] + integral[x-1][y] - integral[x-1][y-1];
-				result->pixels[x][y].r = l + result->pixels[x][y-1].r + result->pixels[x-1][y].r - result->pixels[x-1][y-1].r;
-				result->pixels[x][y].g = l + result->pixels[x][y-1].g + result->pixels[x-1][y].g - result->pixels[x-1][y-1].g;
-				result->pixels[x][y].b = l + result->pixels[x][y-1].b + result->pixels[x-1][y].b - result->pixels[x-1][y-1].b;
+				//integral[y][x] = l + integral[y-1][x] + integral[y][x-1] - integral[y-1][x-1];
+				result->pixels[y][x].r = l + result->pixels[y-1][x].r + result->pixels[y][x-1].r - result->pixels[y-1][x-1].r;
+				result->pixels[y][x].g = l + result->pixels[y-1][x].g + result->pixels[y][x-1].g - result->pixels[y-1][x-1].g;
+				result->pixels[y][x].b = l + result->pixels[y-1][x].b + result->pixels[y][x-1].b - result->pixels[y-1][x-1].b;
+				//printf("%.1f %.1f %.1f\n", result->pixels[y-1][x].r, result->pixels[y][x-1].r, result->pixels[y-1][x-1].r);
 			}
-			//printf("%d %d: %f, %f, %f\n", x, y, result->pixels[x][y].r, result->pixels[x][y].g, result->pixels[x][y].b);
+			
 		}
 	}
 
@@ -117,8 +124,8 @@ RgbImage* summed(RgbImage* pxls, int isSquared) {
 
 
 float getMean(RgbImage* integral, int x, int y, int window, int area) {
-	return (integral->pixels[x][y].r - integral->pixels[x + window][y].r- integral->pixels[x][y + window].r 
-		+ integral->pixels[x + window][y + window].r) / area;
+	return (integral->pixels[y][x].r - integral->pixels[y + window][x].r- integral->pixels[y][x + window].r 
+		+ integral->pixels[y + window][x + window].r) / area;
 }
 
 
@@ -127,10 +134,10 @@ float getFeatureVal(RgbImage* integral, Feature feat, float scale, int x, int y)
 	float totalFeatureVal = 0.0;
 	int i;
 	for (i = 0; i < feat.rectNum; i++) {
-		int rectx = (int)(feat.rectList[i].x * scale + 0.5);
-		int recty = (int)(feat.rectList[i].y * scale + 0.5);
-		int rectw = (int)(feat.rectList[i].width * scale + 0.5);
-		int recth = (int)(feat.rectList[i].height * scale + 0.5);
+		int rectx = (int)(feat.rectList[i].width * scale + 0.5);
+		int recty = (int)(feat.rectList[i].height * scale + 0.5);
+		int rectw = (int)(feat.rectList[i].x * scale + 0.5);
+		int recth = (int)(feat.rectList[i].y * scale + 0.5);
 
 		int w1x = min(x + rectx, integral->w - 1);
 		int w1y = min(y + recty, integral->h - 1);
@@ -141,8 +148,10 @@ float getFeatureVal(RgbImage* integral, Feature feat, float scale, int x, int y)
 		int w4x = min(x + rectx + rectw, integral->w - 1);
 		int w4y = min(y + recty + recth, integral->h - 1);
 
-		totalFeatureVal += feat.rectList[i].weight * ( integral->pixels[w1x][w1y].r 
-			- integral->pixels[w2x][w2y].r - integral->pixels[w3x][w3y].r + integral->pixels[w4x][w4y].r);
+		//printf("%d %d %d %d %d %d %d %d %d %d %d %d %d %d\n", integral->w, integral->h, rectx, recty, rectw, recth, w1x, w1y, w2x, w2y, w3x, w3y, w4x, w4y);
+
+		totalFeatureVal += feat.rectList[i].weight * ( integral->pixels[w1y][w1x].r 
+			- integral->pixels[w2y][w2x].r - integral->pixels[w3y][w3x].r + integral->pixels[w4y][w4x].r);
 	}
 	return totalFeatureVal;
 }
@@ -206,9 +215,9 @@ void detectSingleScale(RgbImage* pxls, RgbImage* integral, RgbImage* integralsq,
 			//fit = shrink(pix, x, y, window, defined_size, downsp)
 		
 			float mean = getMean(integral, x, y, window, area);
-			float variance = getMean(integral, x, y, window, area) - (mean * mean);
+			float variance = getMean(integralsq, x, y, window, area) - (mean * mean);
 
-			printf("%d, %d: %f, %f\n", y, x, mean, variance);
+			//printf("%d %d %f %f\n", y, x, mean, variance);
 
 			float stdev = 1.0;
 
@@ -232,7 +241,7 @@ void detectSingleScale(RgbImage* pxls, RgbImage* integral, RgbImage* integralsq,
 						stagePassThresh += classy->stages[i].nodeList[j].weights[1];
 					}
 
-					printf("%d, %f, %f, %f\n", classy->stages[i].nodeList[j].featind, classy->stages[i].nodeList[j].threshold, stagePassThresh, totalFeatureVal);
+					printf("%d %f %f %f\n", classy->stages[i].nodeList[j].featind, classy->stages[i].nodeList[j].threshold, stagePassThresh, totalFeatureVal);
 				}
 
 				if (stagePassThresh < classy->stages[i].threshold) {
@@ -268,14 +277,21 @@ void detectMultiScale(RgbImage* pxls, Cascade* classifier, char* filePath) {
 	int height = pxls->h;
 	int max_window = min(width, height);
 
-	//test summed
+	//printf("%d %d %d\n", width, height, max_window);
+/*
+	int x, y;
+
+	for(y = 0; y < height; y++) {
+		for(x = 0; x < width; x++) {
+			printf("%f\n", pxls->pixels[y][x].r);
+		}
+	}
+*/
+	//test summed, done, p[x][y] == c[y][x]
 	RgbImage* integral = summed(pxls, 0);
 	RgbImage* integralsq = summed(pxls, 1);
 
-	//test getMean
-	//float mean = getMean(integral, 1, 2, 25, 625);
-	//float var = getMean(integral, 1, 2, 25, 625) - (mean * mean);
-	//printf("%f, %f\n", mean, var);
+	
 
 	//test getFeatureVal and detectSingleScale
 	float bounds = classifier->dim;
