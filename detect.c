@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <stdbool.h>
 //#include "fann.h"
 #include "rgb_image.h"
 #include "parse.h"
@@ -19,11 +20,53 @@ typedef struct Face {
 	struct Face* next;
 } Face;
 
-Face* head;
-Face* tail;
+Face* head = NULL;
 int count = 0;
-//faces = [] //what array? array of window sizes? guess as [x,y,?]
 
+void add(int window, int x, int y) {
+    Face* temp = (Face *)malloc(sizeof(Face));
+    temp->window = window;
+    temp->x = x;
+    temp->y = y;
+    if (head == NULL) {
+    	head = temp;
+    	head->next = NULL;
+    } else {
+    	temp->next = head;
+    	head = temp;
+    }
+}
+
+bool contains(Face* face) {
+	Face* temp = head;
+	while(temp != NULL) {
+		if(face->window == temp->window && face->x == temp->x && face->y == temp->y) {
+			return true;
+		}
+		temp = temp->next;
+	}
+	return false;
+}
+
+void delete(Face* face) {
+    Face *temp, *prev;
+    prev = head;
+    temp = head;
+    while(temp != NULL) {
+    	if(face->window == temp->window && face->x == temp->x && face->y == temp->y) {
+        	if(temp == head) {
+        		head = temp->next;
+        		free(temp);
+        	} else {
+		        prev->next = temp->next;
+		        free(temp);
+		    }
+    	} else {
+	        prev = temp;
+	        temp = temp->next;
+    	}
+    }
+}
 void grayscale(RgbImage* image) {
     int i;
     int j;
@@ -156,51 +199,68 @@ float getFeatureVal(RgbImage* integral, Feature feat, float scale, int x, int y)
 	return totalFeatureVal;
 }
 
-/*
+
 int mergeRectangles() {
 	int diff = 0;
-	int i;
-	int j;
-	for (i = 0; i < faces.length; i++) {
-		for (j = 0; j < faces.length; j++) {
+	int i, j;
+	bool del = false;
+	Face* rect1 = head;
+	Face* rect2 = head;
 
-			if (!faces.contains(faces[i])||!faces.contains(faces[j])) {
-				continue;
-			}
+	int size = count;
+
+	for (i = 0; i < count; i++) {
+		for (j = 0; j < size; j++) {
 			if (i == j) {
 				continue;
 			}
-
-			int r1x1 = faces[i][1];
-			int r1x2 = faces[i][1] + faces[i][0];
-			int r1y1 = faces[i][2];
-			int r1y2 = faces[i][2] + faces[i][0];
-
-			int r2x1 = faces[j][1];
-			int r2x2 = faces[j][1] + faces[j][0];
-			int r2y1 = faces[j][2];
-			int r2y2 = faces[j][2] + faces[j][0];
-
-			//if they don't overlap, skip it
-			if (r1x1 < r2x2 && r1x2 > r2x1 && r1y1 < r2y2 && r1y2 > r2y1) {
-				int a1 = faces[i][0] * faces[i][0];
-				int a2 = faces[j][0] * faces[j][0];
-
-				float aIntersect = max(0,min(r1x2, r2x2) - max(r1x1, r2x1)) * max(0,min(r1y2, r2y2)-max(r1y1, r2y1));
-				float aUnion = a1 + a2 - aIntersect;
-				if (aIntersect/aUnion > 0.4) {
-					faces[i][1] = min(r1x1, r2x1);
-					faces[i][2] = min(r1y1, r2y1);
-					faces[i][0] = max(max(r1x2, r2x2) - rect1[1], max(r1y2, r2y2) - rect1[2]);
-					if (faces.contains(faces[j]) {
-						faces.remove(rect2);
-						diff++;
-					]
-				}
+			if (!contains(rect1) || !contains(rect2)) {
+				continue;
 			}
 
+			printf("%d %d %d %d\n", size, count, i, j);
+			int r1x1 = rect1->x;
+			int r1x2 = r1x1 + rect1->window;
+			int r1y1 = rect1->y;
+			int r1y2 = r1y1 + rect1->window;
+
+			int r2x1 = rect2->x;
+			int r2x2 = r2x1 + rect2->window;
+			int r2y1 = rect2->y;
+			int r2y2 = r2y1 + rect2->window;
+
+			if (r1x1 < r2x2 && r1x2 > r2x1 && r1y1 < r2y2 && r1y2 > r2y1) {
+				int a1 = rect1->window * rect1->window;
+				int a2 = rect2->window * rect2->window;
+				int aIntersect = max(0, min(r1x2, r2x2) - max(r1x1, r2x1)) * max(0, min(r1y2, r2y2) - max(r1y1, r2y1));
+				int aUnion = a1 + a2 - aIntersect;
+				if ((float)aIntersect / aUnion > 0.4) {
+					rect1->x = min(r1x1, r2x1);
+					rect1->y = min(r1y1, r2y1);
+					rect1->window = max(max(r1x2, r2x2) - rect1->x, max(r1y2, r2y2) - rect1->y);
+					if (contains(rect2)) {
+						Face* temp = rect2->next;
+						delete(rect2);
+						del = true;
+						rect2 = temp;
+						diff++;
+						count--;
+						printf("Deleted.\n");
+					}
+				}
+			}
+			if (!del) {
+				rect2 = rect2->next;
+			} else {
+				del = false;
+			}
+		}
+		size = count;
+		rect1 = rect1->next;
+	}
+	
 	return diff;
-}*/
+}
 
 void detectSingleScale(RgbImage* pxls, RgbImage* integral, RgbImage* integralsq, Cascade* classy, int window, float scale, char* filePath) {
 	int width = integral->w;
@@ -241,7 +301,7 @@ void detectSingleScale(RgbImage* pxls, RgbImage* integral, RgbImage* integralsq,
 						stagePassThresh += classy->stages[i].nodeList[j].weights[1];
 					}
 
-					printf("%d %f %f %f\n", classy->stages[i].nodeList[j].featind, classy->stages[i].nodeList[j].threshold, stagePassThresh, totalFeatureVal);
+					//printf("%d %f %f %f\n", classy->stages[i].nodeList[j].featind, classy->stages[i].nodeList[j].threshold, stagePassThresh, totalFeatureVal);
 				}
 
 				if (stagePassThresh < classy->stages[i].threshold) {
@@ -255,16 +315,9 @@ void detectSingleScale(RgbImage* pxls, RgbImage* integral, RgbImage* integralsq,
 					//printPix(fit, 1, filePath)
 					//onecount = onecount + 1
 					//faces.append([window, x, y])
-					if(tail->next == NULL) {
-						tail->next = (Face *)malloc(sizeof(Face));
-						tail = tail->next;
-					}
-					tail->window = window;
-					tail->x = x;
-					tail->y = y;
-					tail->next = NULL;
+					add(window, x, y);
 					count++;
-					printf("Potentially a face.\n");
+					//printf("Potentially a face.\n");
 				}
 			}
 		}
@@ -299,31 +352,29 @@ void detectMultiScale(RgbImage* pxls, Cascade* classifier, char* filePath) {
 	while (bounds < max_window) {
 		bounds = bounds * 1.25;
 		scale = scale * 1.25;
-		head = (Face *)malloc(sizeof(Face));
-
-		head->window = 0;
-		head->x = 0;
-		head->y = 0;
-		head->next = NULL;
-
-		tail = head;
-		//printf("bounds: %d, scale: %f\n", (int)bounds, scale);
 		detectSingleScale(pxls, integral, integralsq, classifier, (int)bounds, scale, filePath);
 	}
 
-	Face* cur = head->next;
-	while(cur != NULL) {
-		printf("[%d, %d, %d] | ", cur->window, cur->x, cur->y);
-		cur = cur->next;
+	printf("Finished detecting.\n");
+
+	printf("Detected faces = %d!\n", count);
+
+	int diff = 1;
+	while (diff > 0) {
+		printf("Merging.\n");
+		diff = mergeRectangles();
 	}
-	printf("total faces = %d!\n", count);
 
-	//int diff = 1;
-	//while (diff > 0) {
-	//	diff = mergeRectangles();
-	//}
+	printf("Start printing.\n");
+	while(head != NULL) {
+		printf("[%d, %d, %d] | ", head->window, head->x, head->y);
+		Face* temp = head;
+		head = head->next;
+		free(temp);
+	}
+	printf("Total faces = %d!\n", count);
 
-	//printf("%d, %d, %d, %d\n", integral->w, integral->h, integralsq->w, integralsq->h);
+	//need to free the linked list
 	freeRgbImage(integral);
 	freeRgbImage(integralsq);
 }
