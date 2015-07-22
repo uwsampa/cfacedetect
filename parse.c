@@ -153,16 +153,3 @@ void freeCascade(Cascade* cas) {
 	printf("Cascade built.\n");
 	return cas;
 }
-
-/*
-int main() {
-	Cascade* casPtr = loadCascade("5x5.xml");
-	if (!casPtr) {
-		printf("loadCascade failed\n");
-	} else {
-		printf("%d\n", casPtr->features[0].rectList[0].x);
-	}
-	freeCascade(casPtr);
-	return 0;
-}
-*/

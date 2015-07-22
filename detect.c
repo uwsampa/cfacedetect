@@ -6,6 +6,7 @@
 //#include "fann.h"
 #include "rgb_image.h"
 #include "parse.h"
+#include "shrink.h"
 
 #define INPIC "Images/gee.rgb"
 //#define SIZEOF(array) sizeof(array) / sizeof(array[0])
@@ -103,36 +104,13 @@ void grayscale(RgbImage* image) {
 }
 
 RgbImage* summed(RgbImage* pxls, int isSquared) {
-	int i, c = 0;
 
 	//Initialize and allocate for RgbImage
-	RgbImage* result = (RgbImage *)malloc(sizeof(RgbImage));
-	result->w = pxls->w;
-	result->h = pxls->h;
-	result->meta = NULL;
+	RgbImage* result = allocate(pxls->w, pxls->h);
 
-	result->pixels = (RgbPixel**)malloc(pxls->h * sizeof(RgbPixel*));
-	if (result->pixels == NULL) {
-        printf("Warning: Oops! Cannot allocate memory for the pixels!\n");
-        return NULL;
-    }
-	for(i = 0; i < pxls->h; i++) {
-        result->pixels[i] = (RgbPixel*)malloc(pxls->w * sizeof(RgbPixel));
-        if (result->pixels[i] == NULL) {
-            c = 1;
-            break;
-        }
-    }
-	if (c == 1) {
-		printf("Warning: Oops! Cannot allocate memory for the pixels!\n");
-		for (i--; i >= 0; i--) {
-	    	free(result->pixels[i]);
-	    }
-		free(result->pixels);
-		free(result);
+	if(result == NULL) {
 		return NULL;
 	}
-	printf("Image allocated.\n");
 
 	//Integral Image
 	int x, y;
@@ -286,9 +264,7 @@ void detectSingleScale(RgbImage* pxls, RgbImage* integral, RgbImage* integralsq,
 	for (y = 0; y < height - window; y++) {
 		for (x = 0; x < width - window; x++) {
 
-			//fit = []
-			//pix = np.array(img)
-			//fit = shrink(pix, x, y, window, defined_size, downsp)
+			//RgbImage* fit = shrink(pix, x, y, window, defined_size, true);
 		
 			float mean = getMean(integral, x, y, window, area);
 			float variance = getMean(integralsq, x, y, window, area) - (mean * mean);
@@ -420,6 +396,22 @@ int main(int argc, char* argv[]) {
 	}
 
 	freeRgbImage(&srcImage);
+
+	//for testing shrink
+	/*
+	RgbImage srcImage;
+	initRgbImage(&srcImage);
+	loadRgbImage("Images/gee.rgb", &srcImage);
+
+	RgbImage* dstImage = shrink(&srcImage, 0, 0, 100, 30, false);
+
+	if (dstImage != NULL) {
+		saveRgbImage(dstImage, "Images/shrink.rgb", 1);
+		freeRgbImage(dstImage);
+	}
+	
+	freeRgbImage(&srcImage);
+	*/
 
 	return 0;
 }
