@@ -9,11 +9,12 @@
 
 #define INPIC "Images/gee.rgb"
 //#define SIZEOF(array) sizeof(array) / sizeof(array[0])
-#define min(X, Y)  (X < Y) ? X : Y
-#define max(X, Y)  (X > Y) ? X : Y
+#define min(X, Y)  ((X) < (Y) ? (X) : (Y))
+#define max(X, Y)  ((X) > (Y) ? (X) : (Y))
 #define intf(X) (X - floor(X)) >= 0.5 ? floor(X) + 1 : floor(X)
 
 typedef struct Face {
+	int index;
 	int window;
 	int x;
 	int y;
@@ -23,18 +24,22 @@ typedef struct Face {
 Face* head = NULL;
 int count = 0;
 
-void add(int window, int x, int y) {
+void push(int window, int x, int y, int index) {
     Face* temp = (Face *)malloc(sizeof(Face));
     temp->window = window;
     temp->x = x;
     temp->y = y;
+    temp->index = index;
+    temp->next = NULL;
+    Face* cur = head;
     if (head == NULL) {
     	head = temp;
-    	head->next = NULL;
     } else {
-    	temp->next = head;
-    	head = temp;
-    }
+	    while (cur->next != NULL) {
+	        cur = cur->next;
+	    }
+    	cur->next = temp;
+    } 
 }
 
 bool contains(Face* face) {
@@ -54,19 +59,28 @@ void delete(Face* face) {
     temp = head;
     while(temp != NULL) {
     	if(face->window == temp->window && face->x == temp->x && face->y == temp->y) {
+    		Face* cur;
         	if(temp == head) {
         		head = temp->next;
         		free(temp);
+        		cur = head;
         	} else {
 		        prev->next = temp->next;
 		        free(temp);
+		        cur = prev->next;
 		    }
+		    while(cur != NULL) {
+		    	cur->index -= 1;
+		    	cur = cur->next;
+		    }
+		    break;
     	} else {
 	        prev = temp;
 	        temp = temp->next;
     	}
     }
 }
+
 void grayscale(RgbImage* image) {
     int i;
     int j;
@@ -218,7 +232,7 @@ int mergeRectangles() {
 				continue;
 			}
 
-			printf("%d %d %d %d\n", size, count, i, j);
+			//printf("%d %d %d %d\n", size, count, i, j);
 			int r1x1 = rect1->x;
 			int r1x2 = r1x1 + rect1->window;
 			int r1y1 = rect1->y;
@@ -234,7 +248,9 @@ int mergeRectangles() {
 				int a2 = rect2->window * rect2->window;
 				int aIntersect = max(0, min(r1x2, r2x2) - max(r1x1, r2x1)) * max(0, min(r1y2, r2y2) - max(r1y1, r2y1));
 				int aUnion = a1 + a2 - aIntersect;
-				if ((float)aIntersect / aUnion > 0.4) {
+				//printf("%d %d %d %d ", min(r1x2, r2x2), max(r1x1, r2x1), min(r1y2, r2y2), max(r1y1, r2y1));
+				//printf("%d %d %f\n", aIntersect, aUnion, (float)(aIntersect / aUnion));
+				if ((float)(aIntersect / aUnion) > 0.4) {
 					rect1->x = min(r1x1, r2x1);
 					rect1->y = min(r1y1, r2y1);
 					rect1->window = max(max(r1x2, r2x2) - rect1->x, max(r1y2, r2y2) - rect1->y);
@@ -245,7 +261,7 @@ int mergeRectangles() {
 						rect2 = temp;
 						diff++;
 						count--;
-						printf("Deleted.\n");
+						//printf("Deleted.\n");
 					}
 				}
 			}
@@ -315,7 +331,7 @@ void detectSingleScale(RgbImage* pxls, RgbImage* integral, RgbImage* integralsq,
 					//printPix(fit, 1, filePath)
 					//onecount = onecount + 1
 					//faces.append([window, x, y])
-					add(window, x, y);
+					push(window, x, y, count);
 					count++;
 					//printf("Potentially a face.\n");
 				}
@@ -349,6 +365,7 @@ void detectMultiScale(RgbImage* pxls, Cascade* classifier, char* filePath) {
 	//test getFeatureVal and detectSingleScale
 	float bounds = classifier->dim;
 	float scale = 1.0;
+
 	while (bounds < max_window) {
 		bounds = bounds * 1.25;
 		scale = scale * 1.25;
@@ -359,12 +376,13 @@ void detectMultiScale(RgbImage* pxls, Cascade* classifier, char* filePath) {
 
 	printf("Detected faces = %d!\n", count);
 
+	
 	int diff = 1;
 	while (diff > 0) {
 		printf("Merging.\n");
 		diff = mergeRectangles();
 	}
-
+	
 	printf("Start printing.\n");
 	while(head != NULL) {
 		printf("[%d, %d, %d] | ", head->window, head->x, head->y);
