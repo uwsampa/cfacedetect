@@ -1,4 +1,4 @@
-# Make file for libxml parsing
+
 CC = gcc
 
 SCPATH = /usr/include/libxml2
@@ -11,16 +11,13 @@ CFLAGS = -O3 -Wall -g -std=c11
 
 HEADERS = parse.h rgb_image.h shrink.h
 
-LINK = -lxml2 -lm
+LINK = -lxml2 -lm -lfann
 
 
 all: detect FORCE
 
-#$(TARGET): $(TARGET).c
-#	$(CC) $(CFLAGS) -I$(PATH) $(TARGET).c -o $(TARGET) $(LINK)
-
 detect: $(OBJS) FORCE
-	$(CC) $(CFLAGS) -o detect $(OBJS) -I$(SCPATH) -L$(LIB) $(LINK)
+	$(CC) $(CFLAGS) -o detect $(OBJS) -I$(SCPATH) -L$(LIB) $(LINK) -I fann/ -I fann/include/ fann/floatfann.c
 
 detect.o: detect.c $(HEADERS) FORCE
 	$(CC) $(CFLAGS) -c $< -o detect.o

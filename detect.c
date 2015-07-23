@@ -3,16 +3,24 @@
 #include <stdlib.h>
 #include <math.h>
 #include <stdbool.h>
-//#include "fann.h"
+#include "floatfann.h"
 #include "rgb_image.h"
 #include "parse.h"
 #include "shrink.h"
 
 #define INPIC "Images/gee.rgb"
-//#define SIZEOF(array) sizeof(array) / sizeof(array[0])
+
 #define min(X, Y)  ((X) < (Y) ? (X) : (Y))
 #define max(X, Y)  ((X) > (Y) ? (X) : (Y))
-#define intf(X) (X - floor(X)) >= 0.5 ? floor(X) + 1 : floor(X)
+
+#define APPROX true
+
+#define DOWNSP false
+
+#define NN "vision_3L_36N.net"
+
+#define DEFSIZE 20
+
 
 typedef struct Face {
 	int index;
@@ -256,7 +264,7 @@ int mergeRectangles() {
 	return diff;
 }
 
-void detectSingleScale(RgbImage* pxls, RgbImage* integral, RgbImage* integralsq, Cascade* classy, int window, float scale, char* filePath) {
+void detectSingleScale(RgbImage* integral, RgbImage* integralsq, Cascade* classy, int window, float scale, char* filePath) {
 	int width = integral->w;
 	int height = integral->h;
 	int area = window * window;
@@ -309,8 +317,44 @@ void detectSingleScale(RgbImage* pxls, RgbImage* integral, RgbImage* integralsq,
 					//faces.append([window, x, y])
 					push(window, x, y, count);
 					count++;
-					//printf("Potentially a face.\n");
 				}
+			}
+		}
+	}
+}
+
+void approxDetectSingleScale(struct fann *ann, RgbImage* pxls, int window, char* filePath) {
+	int width = pxls->w;
+	int height = pxls->h;
+
+	fann_type input[DEFSIZE * DEFSIZE];
+    float *calc_out;
+    int s;
+
+	int y, x;
+	for (y = 0; y < height - window; y++) {
+		for (x = 0; x < width - window; x++) {
+			RgbImage* result = shrink(pxls, x, y, window, DEFSIZE, DOWNSP);
+
+			if(result == NULL) {
+				return;
+			}
+
+			int i;
+
+			for(i = 0; i < DEFSIZE * DEFSIZE; i++) {
+				input[i] = result->pixels[i / DEFSIZE][i % DEFSIZE].r / 255.0;
+			}
+
+			calc_out = fann_run(ann, input);
+
+			s = calc_out[0] > 0.5 ? 1 : 0;
+
+			if(s == 1) {
+				push(window, x, y, count);
+				count++;
+			} else {
+				break;
 			}
 		}
 	}
@@ -318,34 +362,40 @@ void detectSingleScale(RgbImage* pxls, RgbImage* integral, RgbImage* integralsq,
 
 void detectMultiScale(RgbImage* pxls, Cascade* classifier, char* filePath) {
 	printf("In detectMultiScale.\n");
-	int width = pxls->w; //maybe avoid img? only use pxls is enough
-	int height = pxls->h;
-	int max_window = min(width, height);
+	//int width = pxls->w; //maybe avoid img? only use pxls is enough
+	//int height = pxls->h;
+	int max_window = min(pxls->w, pxls->h);
 
-	//printf("%d %d %d\n", width, height, max_window);
-/*
-	int x, y;
+	RgbImage* integral, integralsq;
 
-	for(y = 0; y < height; y++) {
-		for(x = 0; x < width; x++) {
-			printf("%f\n", pxls->pixels[y][x].r);
+	struct fann *ann;
+
+
+	#if APPROX
+		ann = fann_create_from_file(NN);
+	#else
+		integral = summed(pxls, 0);
+		integralsq = summed(pxls, 1);
+
+		if(integral == NULL || integralsq == NULL) {
+			return;
 		}
-	}
-*/
-	//test summed, done, p[x][y] == c[y][x]
-	RgbImage* integral = summed(pxls, 0);
-	RgbImage* integralsq = summed(pxls, 1);
 
+	#endif
 	
 
 	//test getFeatureVal and detectSingleScale
 	float bounds = classifier->dim;
 	float scale = 1.0;
-
+	
 	while (bounds < max_window) {
 		bounds = bounds * 1.25;
 		scale = scale * 1.25;
-		detectSingleScale(pxls, integral, integralsq, classifier, (int)bounds, scale, filePath);
+		#if APPROX
+			approxDetectSingleScale(ann, pxls, (int)bounds, filePath);
+		#else
+			detectSingleScale(integral, integralsq, classifier, (int)bounds, scale, filePath);
+		#endif
 	}
 
 	printf("Finished detecting.\n");
@@ -368,9 +418,12 @@ void detectMultiScale(RgbImage* pxls, Cascade* classifier, char* filePath) {
 	}
 	printf("Total faces = %d!\n", count);
 
-	//need to free the linked list
-	freeRgbImage(integral);
-	freeRgbImage(integralsq);
+	#if APPROX
+		fann_destroy(ann);
+	#else
+		freeRgbImage(integral);
+		freeRgbImage(integralsq);
+	#endif
 }
 
 
