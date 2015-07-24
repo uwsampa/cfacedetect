@@ -9,5 +9,5 @@
 Note: This only works rgb file converted from legitimate png.
 
 Use png2rgb.py for conversion.
-*To convert from RGB to PNG: $ python png2rgb.py png Images/example.rgb Images/example.png
-*To convert from PNG to RGB: $ python png2rgb.py rgb Images/example.png Images/example.rgb
+ * To convert from RGB to PNG: `$ python png2rgb.py png Images/example.rgb Images/example.png`
+ * To convert from PNG to RGB: `$ python png2rgb.py rgb Images/example.png Images/example.rgb`
