@@ -15,7 +15,7 @@
 
 #define DOWNSP false //downsample or downscale
 
-#define INPIC "Images/lena.rgb" //picture file
+#define INPIC "Images/gee.rgb" //picture file
 
 #define NN "vision_3L_36N.net" //fann file
 
@@ -71,15 +71,12 @@ void delete(Face* face) {
     temp = head;
     while(temp != NULL) {
     	if(face->window == temp->window && face->x == temp->x && face->y == temp->y) {
-    		Face* cur;
         	if(temp == head) {
         		head = temp->next;
         		free(temp);
-        		cur = head;
         	} else {
 		        prev->next = temp->next;
 		        free(temp);
-		        cur = prev->next;
 		    }
 		    break;
     	} else {
@@ -350,7 +347,7 @@ void approxDetectSingleScale(struct fann *ann, RgbImage* pxls, int window, char*
 			s = calc_out[0] > 0.5 ? 1 : 0;
 
 			if(s == 1) {
-				push(window, x, y, count);
+				push(window, x, y);
 				count++;
 			} else {
 				break;
@@ -368,7 +365,8 @@ void detectMultiScale(RgbImage* pxls, Cascade* classifier, char* filePath) {
 	//int height = pxls->h;
 	int max_window = min(pxls->w, pxls->h);
 
-	RgbImage* integral, integralsq;
+	RgbImage* integral;
+	RgbImage* integralsq;
 
 	struct fann *ann;
 
