@@ -8,37 +8,38 @@
 #include "parse.h"
 #include "shrink.h"
 
-#define INPIC "Images/gee.rgb"
-
 #define min(X, Y)  ((X) < (Y) ? (X) : (Y))
 #define max(X, Y)  ((X) > (Y) ? (X) : (Y))
 
-#define APPROX true
+#define APPROX false //turns on fann
 
-#define DOWNSP false
+#define DOWNSP false //downsample or downscale
 
-#define NN "vision_3L_36N.net"
+#define INPIC "Images/lena.rgb" //picture file
 
-#define DEFSIZE 20
+#define NN "vision_3L_36N.net" //fann file
+
+#define DEFSIZE 20 //defined window size
 
 
+//Structure for storing a face with x, y and window size 
 typedef struct Face {
-	int index;
 	int window;
 	int x;
 	int y;
 	struct Face* next;
 } Face;
 
+//the head of linked list storing faces
 Face* head = NULL;
 int count = 0;
 
-void push(int window, int x, int y, int index) {
+//Append face to the end of linked list
+void push(int window, int x, int y) {
     Face* temp = (Face *)malloc(sizeof(Face));
     temp->window = window;
     temp->x = x;
     temp->y = y;
-    temp->index = index;
     temp->next = NULL;
     Face* cur = head;
     if (head == NULL) {
@@ -51,6 +52,7 @@ void push(int window, int x, int y, int index) {
     } 
 }
 
+//Returns true if face is within the linked list
 bool contains(Face* face) {
 	Face* temp = head;
 	while(temp != NULL) {
@@ -62,6 +64,7 @@ bool contains(Face* face) {
 	return false;
 }
 
+//Delete the face from the linked list
 void delete(Face* face) {
     Face *temp, *prev;
     prev = head;
@@ -78,10 +81,6 @@ void delete(Face* face) {
 		        free(temp);
 		        cur = prev->next;
 		    }
-		    while(cur != NULL) {
-		    	cur->index -= 1;
-		    	cur = cur->next;
-		    }
 		    break;
     	} else {
 	        prev = temp;
@@ -90,6 +89,7 @@ void delete(Face* face) {
     }
 }
 
+//Return a grayscaled RgbImage
 void grayscale(RgbImage* image) {
     int i;
     int j;
@@ -111,6 +111,7 @@ void grayscale(RgbImage* image) {
     printf("Grayscaling done.\n");
 }
 
+//Return an integral image from pxls, isSquared determines if it's squared
 RgbImage* summed(RgbImage* pxls, int isSquared) {
 
 	//Initialize and allocate for RgbImage
@@ -134,24 +135,20 @@ RgbImage* summed(RgbImage* pxls, int isSquared) {
 			//for leftmost pixel, copy from orig
 			//TODO: is dividing by 255 correct? seems to give correct vals...
 			if (x == 0 && y == 0) {
-				//integral[y][x] = l;
 				result->pixels[y][x].r = l;
 				result->pixels[y][x].g = l;
 				result->pixels[y][x].b = l;
 			} else if (y == 0) {
-				//integral[y][x] = l + integral[y-1][x];
 				result->pixels[y][x].r = l + result->pixels[y][x-1].r;
 				result->pixels[y][x].g = l + result->pixels[y][x-1].g;
 				result->pixels[y][x].b = l + result->pixels[y][x-1].b;
 				//printf("y == 0 : %.1f\n", result->pixels[y][x-1].r);
 			} else if (x == 0) {
-				//integral[y][x] = l + integral[y][x-1];
 				result->pixels[y][x].r = l + result->pixels[y-1][x].r;
 				result->pixels[y][x].g = l + result->pixels[y-1][x].g;
 				result->pixels[y][x].b = l + result->pixels[y-1][x].b;
 				//printf("x == 0 : %.1f\n", result->pixels[y-1][x].r);
 			} else {
-				//integral[y][x] = l + integral[y-1][x] + integral[y][x-1] - integral[y-1][x-1];
 				result->pixels[y][x].r = l + result->pixels[y-1][x].r + result->pixels[y][x-1].r - result->pixels[y-1][x-1].r;
 				result->pixels[y][x].g = l + result->pixels[y-1][x].g + result->pixels[y][x-1].g - result->pixels[y-1][x-1].g;
 				result->pixels[y][x].b = l + result->pixels[y-1][x].b + result->pixels[y][x-1].b - result->pixels[y-1][x-1].b;
@@ -165,14 +162,13 @@ RgbImage* summed(RgbImage* pxls, int isSquared) {
 
 }
 
-
+//Return the mean of integral image area
 float getMean(RgbImage* integral, int x, int y, int window, int area) {
 	return (integral->pixels[y][x].r - integral->pixels[y + window][x].r- integral->pixels[y][x + window].r 
 		+ integral->pixels[y + window][x + window].r) / area;
 }
 
-
-
+//Return the feature value computed with the picture
 float getFeatureVal(RgbImage* integral, Feature feat, float scale, int x, int y) {
 	float totalFeatureVal = 0.0;
 	int i;
@@ -199,7 +195,8 @@ float getFeatureVal(RgbImage* integral, Feature feat, float scale, int x, int y)
 	return totalFeatureVal;
 }
 
-
+//Merges all the faces, delete them if they overlap by 40%
+//Look into this may find out the memory leak
 int mergeRectangles() {
 	int diff = 0;
 	int i, j;
@@ -264,6 +261,8 @@ int mergeRectangles() {
 	return diff;
 }
 
+//Sliding the fixed cascade through the picture to figure out if it's a face.
+//If a face store it at the end of linked list
 void detectSingleScale(RgbImage* integral, RgbImage* integralsq, Cascade* classy, int window, float scale, char* filePath) {
 	int width = integral->w;
 	int height = integral->h;
@@ -300,8 +299,6 @@ void detectSingleScale(RgbImage* integral, RgbImage* integralsq, Cascade* classy
 					} else { 
 						stagePassThresh += classy->stages[i].nodeList[j].weights[1];
 					}
-
-					//printf("%d %f %f %f\n", classy->stages[i].nodeList[j].featind, classy->stages[i].nodeList[j].threshold, stagePassThresh, totalFeatureVal);
 				}
 
 				if (stagePassThresh < classy->stages[i].threshold) {
@@ -315,7 +312,7 @@ void detectSingleScale(RgbImage* integral, RgbImage* integralsq, Cascade* classy
 					//printPix(fit, 1, filePath)
 					//onecount = onecount + 1
 					//faces.append([window, x, y])
-					push(window, x, y, count);
+					push(window, x, y);
 					count++;
 				}
 			}
@@ -323,6 +320,8 @@ void detectSingleScale(RgbImage* integral, RgbImage* integralsq, Cascade* classy
 	}
 }
 
+//The FANN version of detectSingleScale
+//First shrink the image to 20x20, then run it through fann to get the output
 void approxDetectSingleScale(struct fann *ann, RgbImage* pxls, int window, char* filePath) {
 	int width = pxls->w;
 	int height = pxls->h;
@@ -356,10 +355,13 @@ void approxDetectSingleScale(struct fann *ann, RgbImage* pxls, int window, char*
 			} else {
 				break;
 			}
+
+			freeRgbImage(result);
 		}
 	}
 }
 
+//Initiating detectSingleScale with different window sizes
 void detectMultiScale(RgbImage* pxls, Cascade* classifier, char* filePath) {
 	printf("In detectMultiScale.\n");
 	//int width = pxls->w; //maybe avoid img? only use pxls is enough
@@ -402,10 +404,9 @@ void detectMultiScale(RgbImage* pxls, Cascade* classifier, char* filePath) {
 
 	printf("Detected faces = %d!\n", count);
 
-	
+	printf("Merging.\n");
 	int diff = 1;
 	while (diff > 0) {
-		printf("Merging.\n");
 		diff = mergeRectangles();
 	}
 	
@@ -420,9 +421,11 @@ void detectMultiScale(RgbImage* pxls, Cascade* classifier, char* filePath) {
 
 	#if APPROX
 		fann_destroy(ann);
+		printf("Destroyed ann.\n");
 	#else
 		freeRgbImage(integral);
 		freeRgbImage(integralsq);
+		printf("Integral freed.\n");
 	#endif
 }
 
@@ -449,22 +452,7 @@ int main(int argc, char* argv[]) {
 	}
 
 	freeRgbImage(&srcImage);
-
-	//for testing shrink
-	/*
-	RgbImage srcImage;
-	initRgbImage(&srcImage);
-	loadRgbImage("Images/gee.rgb", &srcImage);
-
-	RgbImage* dstImage = shrink(&srcImage, 0, 0, 100, 30, false);
-
-	if (dstImage != NULL) {
-		saveRgbImage(dstImage, "Images/shrink.rgb", 1);
-		freeRgbImage(dstImage);
-	}
-	
-	freeRgbImage(&srcImage);
-	*/
+	printf("Image freed.\n");
 
 	return 0;
 }

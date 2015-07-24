@@ -8,6 +8,7 @@
 
 #define VALUE(X) (char *)X->nodesetval->nodeTab[0]->xmlChildrenNode->content
 
+//Returns an xmlptr which returns the given nodeset
 xmlXPathObjectPtr getnodeset (xmlDocPtr doc, xmlChar *xpath) {
 	
 	xmlXPathContextPtr context;
@@ -32,6 +33,7 @@ xmlXPathObjectPtr getnodeset (xmlDocPtr doc, xmlChar *xpath) {
 	return result;
 }
 
+//freeing the cascade
 void freeCascade(Cascade* cas) {
 	int i;
 	for(i = 0; i < cas->stgNum; i++) {
@@ -46,7 +48,8 @@ void freeCascade(Cascade* cas) {
 	printf("Cascade freed.\n");
 }
 
- Cascade* loadCascade(char* path) {
+//Loading from xml and returning the cascade ptr
+Cascade* loadCascade(char* path) {
 	xmlDocPtr doc;
 	xmlXPathObjectPtr result;
 	

@@ -4,7 +4,8 @@
 #include <stdbool.h>
 #include "rgb_image.h"
 
-
+//This allocates memory for a RgbImage.
+//Return the allocated pointer
 RgbImage* allocate(int width, int height) {
 	int i, c = 0;
 
@@ -38,6 +39,8 @@ RgbImage* allocate(int width, int height) {
 	return result;
 }
 
+//This shrinks a image of size starting from x, y to scale size image, downsp tells
+// if use downscaling or downsampling. Return the shrinked image.
 RgbImage* shrink(RgbImage* pxls, int x, int y, int size, int scale, bool downsp) {
 	RgbImage* result = allocate(scale, scale);
 

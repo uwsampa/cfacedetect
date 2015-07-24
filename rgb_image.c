@@ -181,7 +181,6 @@ void freeRgbImage(RgbImage* image) {
             free(image->pixels[i]);
 
     free(image->pixels);
-    printf("Image freed.\n");
 }
 
 void makeGrayscale(RgbImage* image) {
