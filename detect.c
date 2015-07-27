@@ -86,6 +86,15 @@ void delete(Face* face) {
     }
 }
 
+void printfree() {
+	while(head != NULL) {
+		printf("[%d, %d, %d] | ", head->window, head->x, head->y);
+		Face* temp = head;
+		head = head->next;
+		free(temp);
+	}
+}
+
 //Return a grayscaled RgbImage
 void grayscale(RgbImage* image) {
     int i;
@@ -409,12 +418,7 @@ void detectMultiScale(RgbImage* pxls, Cascade* classifier, char* filePath) {
 	}
 	
 	printf("Start printing.\n");
-	while(head != NULL) {
-		printf("[%d, %d, %d] | ", head->window, head->x, head->y);
-		Face* temp = head;
-		head = head->next;
-		free(temp);
-	}
+	printfree();
 	printf("Total faces = %d!\n", count);
 
 	#if APPROX
@@ -445,6 +449,9 @@ int main(int argc, char* argv[]) {
 	Cascade* cas = loadCascade("xml/ocv_clsfr.xml");
 	
 	if(cas != NULL) {
+		#if APPROX
+			printf("Approximating.\n");
+		#endif
 		detectMultiScale(&srcImage, cas, "script.txt");
 		freeCascade(cas);
 	}

@@ -2,7 +2,7 @@
 from PIL import Image
 import png2rgb as pg
 
-imagePath = "Images/c.jpg"
+imagePath = "Images/single.jpg"
 
 if __name__ == '__main__':
 	im = Image.open(imagePath)
