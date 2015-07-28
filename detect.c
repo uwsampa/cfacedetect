@@ -42,6 +42,7 @@ void push(int window, int x, int y) {
     temp->y = y;
     temp->next = NULL;
     Face* cur = head;
+    count++;
     if (head == NULL) {
     	head = temp;
     } else {
@@ -71,6 +72,7 @@ void delete(Face* face) {
     temp = head;
     while(temp != NULL) {
     	if(face->window == temp->window && face->x == temp->x && face->y == temp->y) {
+    		count--;
         	if(temp == head) {
         		head = temp->next;
         		free(temp);
@@ -249,7 +251,6 @@ int mergeRectangles() {
 						del = true;
 						rect2 = temp;
 						diff++;
-						count--;
 						//printf("Deleted.\n");
 					}
 				}
@@ -319,7 +320,6 @@ void detectSingleScale(RgbImage* integral, RgbImage* integralsq, Cascade* classy
 					//onecount = onecount + 1
 					//faces.append([window, x, y])
 					push(window, x, y);
-					count++;
 				}
 			}
 		}
