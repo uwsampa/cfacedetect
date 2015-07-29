@@ -42,6 +42,7 @@ void push(int window, int x, int y) {
     temp->y = y;
     temp->next = NULL;
     Face* cur = head;
+    count++;
     if (head == NULL) {
     	head = temp;
     } else {
@@ -71,6 +72,7 @@ void delete(Face* face) {
     temp = head;
     while(temp != NULL) {
     	if(face->window == temp->window && face->x == temp->x && face->y == temp->y) {
+    		count--;
         	if(temp == head) {
         		head = temp->next;
         		free(temp);
@@ -214,10 +216,16 @@ int mergeRectangles() {
 
 	for (i = 0; i < count; i++) {
 		for (j = 0; j < size; j++) {
-			if (i == j) {
+
+			printf("(%d, %d, %d) | (%d, %d, %d)\n", rect1->window, rect1->x, rect1->y, rect2->window, rect2->x, rect2->y);
+
+			if (!contains(rect1) || !contains(rect2)) {
+				printf("first if\n");
 				continue;
 			}
-			if (!contains(rect1) || !contains(rect2)) {
+
+			if (i == j) {
+				printf("second if, same rect\n");
 				continue;
 			}
 
@@ -233,6 +241,7 @@ int mergeRectangles() {
 			int r2y2 = r2y1 + rect2->window;
 
 			if (r1x1 < r2x2 && r1x2 > r2x1 && r1y1 < r2y2 && r1y2 > r2y1) {
+				printf("overlap\n");
 				int a1 = rect1->window * rect1->window;
 				int a2 = rect2->window * rect2->window;
 				int aIntersect = max(0, min(r1x2, r2x2) - max(r1x1, r2x1)) * max(0, min(r1y2, r2y2) - max(r1y1, r2y1));
@@ -240,16 +249,17 @@ int mergeRectangles() {
 				//printf("%d %d %d %d ", min(r1x2, r2x2), max(r1x1, r2x1), min(r1y2, r2y2), max(r1y1, r2y1));
 				//printf("%d %d %f\n", aIntersect, aUnion, (float)(aIntersect / aUnion));
 				if ((float)(aIntersect / aUnion) > 0.4) {
+					printf("by more than 40 percent\n");
 					rect1->x = min(r1x1, r2x1);
 					rect1->y = min(r1y1, r2y1);
 					rect1->window = max(max(r1x2, r2x2) - rect1->x, max(r1y2, r2y2) - rect1->y);
 					if (contains(rect2)) {
+						printf("rect2 in faces and removed\n");
 						Face* temp = rect2->next;
 						delete(rect2);
 						del = true;
 						rect2 = temp;
 						diff++;
-						count--;
 						//printf("Deleted.\n");
 					}
 				}
@@ -319,7 +329,6 @@ void detectSingleScale(RgbImage* integral, RgbImage* integralsq, Cascade* classy
 					//onecount = onecount + 1
 					//faces.append([window, x, y])
 					push(window, x, y);
-					count++;
 				}
 			}
 		}
