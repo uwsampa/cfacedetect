@@ -10,6 +10,7 @@
 #include <string.h>
 #include <stdlib.h>
 
+// FIXME: Pixels should be ints
 void initRgbImage(RgbImage* image) {
     image->w = 0;
     image->h = 0;
