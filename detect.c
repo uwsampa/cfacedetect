@@ -42,7 +42,6 @@ void push(int window, int x, int y) {
     temp->y = y;
     temp->next = NULL;
     Face* cur = head;
-    count++;
     if (head == NULL) {
     	head = temp;
     } else {
@@ -66,19 +65,20 @@ bool contains(Face* face) {
 }
 
 //Delete the face from the linked list
-void delete(Face* face) {
+Face* delete(Face* face) {
     Face *temp, *prev;
     prev = head;
     temp = head;
     while(temp != NULL) {
     	if(face->window == temp->window && face->x == temp->x && face->y == temp->y) {
-    		count--;
         	if(temp == head) {
         		head = temp->next;
         		free(temp);
+        		return head;
         	} else {
 		        prev->next = temp->next;
 		        free(temp);
+		        return prev->next;
 		    }
 		    break;
     	} else {
@@ -86,6 +86,7 @@ void delete(Face* face) {
 	        temp = temp->next;
     	}
     }
+    return NULL;
 }
 
 void printfree() {
@@ -209,14 +210,18 @@ int mergeRectangles() {
 	int diff = 0;
 	int i, j;
 	bool del = false;
-	Face* rect1 = head;
-	Face* rect2 = head;
+	
 
 	int size = count;
-
-	for (i = 0; i < count; i++) {
+	Face* rect1 = head;
+	for (i = 0; i < size; i++) {
+		
+		Face* rect2 = head;
+		int r1x1 = rect1->x;
+		int r1x2 = r1x1 + rect1->window;
+		int r1y1 = rect1->y;
+		int r1y2 = r1y1 + rect1->window;
 		for (j = 0; j < size; j++) {
-
 			printf("(%d, %d, %d) | (%d, %d, %d)\n", rect1->window, rect1->x, rect1->y, rect2->window, rect2->x, rect2->y);
 
 			if (!contains(rect1) || !contains(rect2)) {
@@ -226,14 +231,11 @@ int mergeRectangles() {
 
 			if (i == j) {
 				printf("second if, same rect\n");
+				rect2 = rect2->next;
 				continue;
 			}
 
 			//printf("%d %d %d %d\n", size, count, i, j);
-			int r1x1 = rect1->x;
-			int r1x2 = r1x1 + rect1->window;
-			int r1y1 = rect1->y;
-			int r1y2 = r1y1 + rect1->window;
 
 			int r2x1 = rect2->x;
 			int r2x2 = r2x1 + rect2->window;
@@ -248,17 +250,16 @@ int mergeRectangles() {
 				int aUnion = a1 + a2 - aIntersect;
 				//printf("%d %d %d %d ", min(r1x2, r2x2), max(r1x1, r2x1), min(r1y2, r2y2), max(r1y1, r2y1));
 				//printf("%d %d %f\n", aIntersect, aUnion, (float)(aIntersect / aUnion));
-				if ((float)(aIntersect / aUnion) > 0.4) {
+				if ((float)(aIntersect) / aUnion > 0.4) {
 					printf("by more than 40 percent\n");
 					rect1->x = min(r1x1, r2x1);
 					rect1->y = min(r1y1, r2y1);
 					rect1->window = max(max(r1x2, r2x2) - rect1->x, max(r1y2, r2y2) - rect1->y);
 					if (contains(rect2)) {
 						printf("rect2 in faces and removed\n");
-						Face* temp = rect2->next;
-						delete(rect2);
+						rect2 = delete(rect2);
+						count--;
 						del = true;
-						rect2 = temp;
 						diff++;
 						//printf("Deleted.\n");
 					}
@@ -270,7 +271,6 @@ int mergeRectangles() {
 				del = false;
 			}
 		}
-		size = count;
 		rect1 = rect1->next;
 	}
 	
@@ -329,6 +329,7 @@ void detectSingleScale(RgbImage* integral, RgbImage* integralsq, Cascade* classy
 					//onecount = onecount + 1
 					//faces.append([window, x, y])
 					push(window, x, y);
+					count++;
 				}
 			}
 		}
