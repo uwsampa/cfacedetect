@@ -28,4 +28,6 @@ void freeRgbImage(RgbImage* image);
 
 void makeGrayscale(RgbImage* rgbImage);
 
+void grayscale(RgbImage* image);
+
 #endif /* RGB_IMAGE_H_ */

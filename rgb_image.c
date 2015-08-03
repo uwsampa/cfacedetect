@@ -5,10 +5,11 @@
  *      Author: Hadi Esmaeilzadeh <hadianeh@cs.washington.edu>
  */
 
-#include "rgb_image.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
+#include "rgb_image.h"
 
 // FIXME: Pixels should be ints
 void initRgbImage(RgbImage* image) {
@@ -205,4 +206,25 @@ void makeGrayscale(RgbImage* image) {
             image->pixels[i][j].b = luminance;
         }
     }
+}
+
+void grayscale(RgbImage* image) {
+    int i;
+    int j;
+    float luminance;
+
+    for(i = 0; i < image->h; i++) {
+        for(j = 0; j < image->w; j++) {
+            luminance =
+                0.299 * image->pixels[i][j].r +
+                0.587 * image->pixels[i][j].g +
+                0.114 * image->pixels[i][j].b;
+
+            // TODO: Match Python implementation in rounding
+            image->pixels[i][j].r = floor(luminance);
+            image->pixels[i][j].g = floor(luminance);
+            image->pixels[i][j].b = floor(luminance);
+        }
+    }
+    printf("Grayscaling done.\n");
 }

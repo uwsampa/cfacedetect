@@ -5,11 +5,11 @@ SCPATH = /usr/include/libxml2
 
 LIB = /usr/local/lib
 
-OBJS = rgb_image.o parse.o detect.o shrink.o
+OBJS = rgb_image.o parse.o detect.o shrink.o face.o
 
 CFLAGS = -O3 -Wall -g -std=c11
 
-HEADERS = parse.h rgb_image.h shrink.h
+HEADERS = parse.h rgb_image.h shrink.h face.h
 
 LINK = -lxml2 -lm -lfann
 
@@ -24,6 +24,9 @@ detect.o: detect.c $(HEADERS) FORCE
 
 shrink.o: shrink.c rgb_image.h FORCE
 	$(CC) $(CFLAGS) -c $< -o shrink.o 
+
+face.o: face.c face.h FORCE
+	$(CC) $(CFLAGS) -c $< -o face.o
 
 rgb_image.o: rgb_image.c rgb_image.h FORCE
 	$(CC) $(CFLAGS) -c $< -o rgb_image.o 
