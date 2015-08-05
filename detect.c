@@ -1,20 +1,25 @@
-
+#include <dirent.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include "floatfann.h"
-#include "rgb_image.h"
-#include "parse.h"
-#include "shrink.h"
+#include <string.h>
+#include <time.h>
 #include "face.h"
+#include "floatfann.h"
+#include "parse.h"
+#include "rgb_image.h"
+#include "shrink.h"
+
+#define VERSION 0
+//0: original viola jones algorithm
+//1: new thierry's way of implementation
 
 #define APPROX false //turns on fann
 
-#define DOWNSP false //downsample or downscale
+#define MERGE true //turns on merging
 
-// FIXME: Have different modes
-// #define MODE
-// 0: no downscaling/downsampling
+#define MODE 2
 // 1: downscaling
 // 2: downsampling
 // 3: maxpooling
@@ -81,7 +86,7 @@ RgbImage* integralImage(RgbImage* pxls, int isSquared) {
 
 //Return the mean of integral image area
 float getMean(RgbImage* integral, int x, int y, int window, int area) {
-    // Works for floats, but if pixels are ints, should be cast to float before division
+    // Works for floats, but if pixels are ints, should be classifiert to float before division
     return (integral->pixels[y][x].r - integral->pixels[y + window][x].r- integral->pixels[y][x + window].r
         + integral->pixels[y + window][x + window].r) / area;
 }
@@ -120,9 +125,9 @@ int mergeRectangles() {
     for(rect1 = head; rect1 != NULL; rect1 = rect1->next) {
         rect2 = rect1->next;
         while(rect2 != NULL) {
-            printf("(%d, %d, %d) | (%d, %d, %d)\n", rect1->window, rect1->x, rect1->y, rect2->window, rect2->x, rect2->y);
+            //printf("(%d, %d, %d) | (%d, %d, %d)\n", rect1->window, rect1->x, rect1->y, rect2->window, rect2->x, rect2->y);
             if (overlap(rect1, rect2, head)) {
-                printf("overlap by 40 percent and deleted\n");
+                //printf("overlap by 40 percent and deleted\n");
                 rect2 = delete(rect2, head);
                 diff++;
                 count--;
@@ -135,17 +140,17 @@ int mergeRectangles() {
 }
 
 
-//Sliding the fixed cascade through the picture to figure out if it's a face.
+//Sliding the fixed classifiercade through the picture to figure out if it's a face.
 //If a face is detected, store it at the end of linked list
-void detectSingleScale(RgbImage* integral, RgbImage* integralsq, Cascade* classifier, int window, float scale, char* filePath) {
+void detectSingleScale(RgbImage* integral, RgbImage* integralsq, Cascade* classifier, int window, float scale) {
     int width = integral->w;
     int height = integral->h;
     int area = window * window;
     int y, x;
     //slide the window along the y axis by Y_STEP_SIZE
-    for (y = 0; y < height - window; y+=Y_STEP_SIZE) {
+    for (y = 0; y < height - window; y += Y_STEP_SIZE) {
         //slide the window along the x axis by X_STEP_SIZE
-        for (x = 0; x < width - window; x+=X_STEP_SIZE) {
+        for (x = 0; x < width - window; x += X_STEP_SIZE) {
 
             float mean = getMean(integral, x, y, window, area);
             float variance = getMean(integralsq, x, y, window, area) - (mean * mean);
@@ -189,7 +194,7 @@ void detectSingleScale(RgbImage* integral, RgbImage* integralsq, Cascade* classi
 
 //The FANN version of detectSingleScale
 //First shrink the image to 20x20, then run it through fann to get the output
-void approxDetectSingleScale(struct fann *ann, RgbImage* pxls, int window, char* filePath) {
+void approxDetectSingleScale(struct fann *ann, RgbImage* pxls, int window) {
     int width = pxls->w;
     int height = pxls->h;
 
@@ -200,7 +205,7 @@ void approxDetectSingleScale(struct fann *ann, RgbImage* pxls, int window, char*
     int y, x;
     for (y = 0; y < height - window; y++) {
         for (x = 0; x < width - window; x++) {
-            RgbImage* result = shrink(pxls, x, y, window, DEFSIZE, DOWNSP);
+            RgbImage* result = shrink(pxls, x, y, window, DEFSIZE, MODE);
 
             if(result == NULL) {
                 return;
@@ -228,112 +233,113 @@ void approxDetectSingleScale(struct fann *ann, RgbImage* pxls, int window, char*
 }
 
 //Initiating detectSingleScale with different window sizes
-void detectMultiScale(RgbImage* pxls, Cascade* classifier, char* filePath) {
-    printf("In detectMultiScale.\n");
+void detectMultiScale(RgbImage* pxls, Cascade* classifier) {
     int max_window = min(pxls->w, pxls->h);
+    float window = classifier->dim;
 
-    RgbImage* integral;
-    RgbImage* integralsq;
+    #if VERSION == 0
 
-    struct fann *ann;
+        RgbImage* integral;
+        RgbImage* integralsq;
 
+        struct fann *ann;
 
-    #if APPROX
-        ann = fann_create_from_file(NN);
-    #else
-        integral = integralImage(pxls, 0);
-        integralsq = integralImage(pxls, 1);
+        #if APPROX
+            printf("Approximating.\n");
+            ann = fann_create_from_file(NN);
+        #else
+            integral = integralImage(pxls, 0);
+            integralsq = integralImage(pxls, 1);
+            if(integral == NULL || integralsq == NULL) {
+                return;
+            }
+        #endif
 
-        if(integral == NULL || integralsq == NULL) {
-            return;
+        float scale = 1.0;
+
+        while (window < max_window) {
+            window = window * SCALE_FACTOR;
+            scale = scale * SCALE_FACTOR;
+
+            #if APPROX
+                approxDetectSingleScale(ann, pxls, (int)window);
+            #else
+                detectSingleScale(integral, integralsq, classifier, (int)window, scale);
+            #endif
+        }
+
+        #if APPROX
+            fann_destroy(ann);
+        #else
+            freeRgbImage(integral);
+            freeRgbImage(integralsq);
+        #endif
+
+    #elif VERSION == 1
+        // TODO: support for downscaling - downscale the whole
+            // image and recompute the integral to keep the window
+            // constant
+            // e.g:
+            // 1: shrink down dimensions and image by scaling factor (window stays the same)
+            // 2: recompute itegrals
+            // 3: detection (pass scale 1, window classifier->dim)
+
+        float shrinkSize = (float)max_window;
+
+        while (shrinkSize > window) {
+            RgbImage* shrinked = shrink(pxls, 0, 0, max_window, (int)shrinkSize, MODE);
+            RgbImage* integral = integralImage(shrinked, 0);
+            RgbImage* integralsq = integralImage(shrinked, 1);
+            detectSingleScale(integral, integralsq, classifier, (int)window, 1);
+            freeRgbImage(shrinked);
+            freeRgbImage(integral);
+            freeRgbImage(integralsq);
+            shrinkSize = shrinkSize / SCALE_FACTOR;
         }
 
     #endif
 
-    float window = classifier->dim;
-    float scale = 1.0;
+    printf("Detected = %d!\n", count);
 
-    while (window < max_window) {
-        window = window * SCALE_FACTOR;
-        scale = scale * SCALE_FACTOR;
-        // TODO: support for downscaling - downscale the whole
-        // image and recompute the integral to keep the window
-        // constant
-        // e.g:
-        // 1: shrink down dimensions and image by scaling factor (window stays the same)
-        // 2: recompute itegrals
-        // 3: detection (pass scale 1, window classifier->dim)
-        #if APPROX
-            approxDetectSingleScale(ann, pxls, (int)window, filePath);
-        #else
-            detectSingleScale(integral, integralsq, classifier, (int)window, scale, filePath);
-        #endif
-    }
-
-    /*
-
-    while (max_window > window) {
-        max_window = max_window / SCALE_FACTOR;
-        RgbImage* shrinked = shrink(pxls, 0, 0, window, max_window, DOWNSP);
-        RgbImage* integral = integralImage(shrinked, 0);
-        RgbImage* integralsq = integralImage(shrinked, 1);
-        detectSingleScale(integral, integralsq, classifier, (int)window, filePath);
-
-    }
-    */
-
-    printf("Finished detecting.\n");
-
-    printf("Detected faces = %d!\n", count);
-
-    printf("Merging.\n");
-    int diff = 1;
-    
-    while (diff > 0) {
-        diff = mergeRectangles();
-    }
+    #if MERGE
+        printf("Merging.\n");
+        int diff = 1;
+        while (diff > 0) {
+            diff = mergeRectangles();
+        }
+    #endif
 
     printf("Start printing.\n");
     printfree(head);
     printf("Total faces = %d!\n", count);
-
-    #if APPROX
-        fann_destroy(ann);
-        printf("Destroyed ann.\n");
-    #else
-        freeRgbImage(integral);
-        freeRgbImage(integralsq);
-        printf("Integral freed.\n");
-    #endif
 }
 
-
-int main(int argc, char* argv[]) {
+void detect(Cascade* classifier, char* filename) {
     RgbImage srcImage;
 
     initRgbImage(&srcImage);
 
-    if(argc > 1) {
-        loadRgbImage(argv[1], &srcImage);
-    } else {
-        loadRgbImage(INPIC, &srcImage);
-    }
-
+    loadRgbImage(filename, &srcImage);
 
     grayscale(&srcImage);
 
-    Cascade* cas = loadCascade("xml/ocv_clsfr.xml");
+    printf("Detecting.\n");
 
-    if(cas != NULL) {
-        #if APPROX
-            printf("Approximating.\n");
-        #endif
-        detectMultiScale(&srcImage, cas, "script.txt");
-        freeCascade(cas);
-    }
+    detectMultiScale(&srcImage, classifier);
 
     freeRgbImage(&srcImage);
-    printf("Image freed.\n");
+}
+
+int main() {
+    Cascade* classifier = loadCascade("xml/ocv_clsfr.xml");
+
+    if (classifier != NULL) {
+
+        detect(classifier, INPIC);
+
+        freeCascade(classifier);
+    }
 
     return 0;
+    
 }

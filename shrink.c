@@ -41,7 +41,13 @@ RgbImage* allocate(int width, int height) {
 
 //This shrinks a image of size starting from x, y to scale size image, downsp tells
 // if use downscaling or downsampling. Return the shrinked image.
-RgbImage* shrink(RgbImage* pxls, int x, int y, int size, int scale, bool downsp) {
+// mode
+// 1: downscaling
+// 2: downsampling
+// 3: maxpooling
+// 4: minpooling
+// 3, 4 wait to be implemented
+RgbImage* shrink(RgbImage* pxls, int x, int y, int size, int scale, int mode) {
 	RgbImage* result = allocate(scale, scale);
 
 	if(result == NULL) {
@@ -50,23 +56,8 @@ RgbImage* shrink(RgbImage* pxls, int x, int y, int size, int scale, bool downsp)
 
 	int scale_factor = size / scale;
 	int i, j;
-	if (downsp) {
-		for (i = 0; i < scale; i++) {
-			for (j = 0; j < scale; j++) {
-				int fixedx = i * scale_factor + x;
-				int fixedy = j * scale_factor + y;
 
-				if (fixedx >= pxls->w) {
-					fixedx = pxls->w - 1;
-				}
-				if (fixedy >= pxls->h) {
-					fixedy = pxls->h - 1;
-				}
-
-				result->pixels[i][j] = pxls->pixels[fixedx][fixedy];
-			}
-		}
-	} else {
+	if (mode == 1) {
 		int k, l;
 		for (i = 0; i < scale; i++) {
 			for (j = 0; j < scale; j++) {
@@ -94,8 +85,24 @@ RgbImage* shrink(RgbImage* pxls, int x, int y, int size, int scale, bool downsp)
 				result->pixels[i][j].b = temp.b / (scale_factor * scale_factor);
 			}
 		}
+	} else if (mode == 2) {
+		for (i = 0; i < scale; i++) {
+			for (j = 0; j < scale; j++) {
+				int fixedx = i * scale_factor + x;
+				int fixedy = j * scale_factor + y;
 
-	}
+				if (fixedx >= pxls->w) {
+					fixedx = pxls->w - 1;
+				}
+				if (fixedy >= pxls->h) {
+					fixedy = pxls->h - 1;
+				}
+
+				result->pixels[i][j] = pxls->pixels[fixedx][fixedy];
+			}
+		}
+	} 
+
 
 	return result;
 }
