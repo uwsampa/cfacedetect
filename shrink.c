@@ -47,32 +47,25 @@ RgbImage* allocate(int width, int height) {
 // 3: maxpooling
 // 4: minpooling
 // 3, 4 wait to be implemented
-RgbImage* shrink(RgbImage* pxls, int x, int y, int size, int scale, int mode) {
-	RgbImage* result = allocate(scale, scale);
+RgbImage* shrink(RgbImage* pxls, int x, int y, int width, int height, int scaleWidth, int scaleHeight, int mode) {
+	RgbImage* result = allocate(scaleWidth, scaleHeight);
 
 	if(result == NULL) {
 		return NULL;
 	}
 
-	int scale_factor = size / scale;
+	int scale_factor = width / scaleWidth;
 	int i, j;
 
 	if (mode == 1) {
 		int k, l;
-		for (i = 0; i < scale; i++) {
-			for (j = 0; j < scale; j++) {
+		for (i = 0; i < scaleHeight; i++) {
+			for (j = 0; j < scaleWidth; j++) {
 				RgbPixel temp = {0.0, 0.0, 0.0};
 				for (k = 0; k < scale_factor; k++) {
 					for (l = 0; l < scale_factor; l++) {
 						int fixedx = i * scale_factor + x + k;
 						int fixedy = j * scale_factor + y + l;
-
-						if (fixedx >= pxls->w) {
-							fixedx = pxls->w - 1;
-						}
-						if (fixedy >= pxls->h) {
-							fixedy = pxls->h - 1;
-						}
 
 						temp.r += pxls->pixels[fixedx][fixedy].r;
 						temp.g += pxls->pixels[fixedx][fixedy].g;
@@ -86,17 +79,10 @@ RgbImage* shrink(RgbImage* pxls, int x, int y, int size, int scale, int mode) {
 			}
 		}
 	} else if (mode == 2) {
-		for (i = 0; i < scale; i++) {
-			for (j = 0; j < scale; j++) {
+		for (i = 0; i < scaleHeight; i++) {
+			for (j = 0; j < scaleWidth; j++) {
 				int fixedx = i * scale_factor + x;
 				int fixedy = j * scale_factor + y;
-
-				if (fixedx >= pxls->w) {
-					fixedx = pxls->w - 1;
-				}
-				if (fixedy >= pxls->h) {
-					fixedy = pxls->h - 1;
-				}
 
 				result->pixels[i][j] = pxls->pixels[fixedx][fixedy];
 			}

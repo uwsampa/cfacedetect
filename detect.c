@@ -11,13 +11,15 @@
 #include "rgb_image.h"
 #include "shrink.h"
 
+#define DEBUG true
+
 #define VERSION 0
 //0: original viola jones algorithm
 //1: new thierry's way of implementation
 
 #define APPROX false //turns on fann
 
-#define MERGE true //turns on merging
+#define MERGE false //turns on merging
 
 #define MODE 2
 // 1: downscaling
@@ -26,7 +28,7 @@
 // 4: minpooling
 
 // File paths
-#define INPIC "Images/single.rgb" //picture file
+#define INPIC "Images/gee.rgb" //picture file
 #define NN "vision_3L_36N.net" //fann file
 
 // Viola Jones Algorithm parameters
@@ -118,16 +120,21 @@ float getFeatureVal(RgbImage* integral, Feature feat, float scale, int x, int y)
 
 //Merges all the faces, delete them if they overlap by 40%
 //Look into this may find out the memory leak
-int mergeRectangles() {
+int mergeRectangles(int filter) {
     int diff = 0;
     Face* rect1;
     Face* rect2;
     for(rect1 = head; rect1 != NULL; rect1 = rect1->next) {
         rect2 = rect1->next;
         while(rect2 != NULL) {
-            //printf("(%d, %d, %d) | (%d, %d, %d)\n", rect1->window, rect1->x, rect1->y, rect2->window, rect2->x, rect2->y);
+            #if DEBUG
+                printf("(%d, %d, %d) | (%d, %d, %d)\n", rect1->window, rect1->x, rect1->y, rect2->window, rect2->x, rect2->y);
+            #endif
+
             if (overlap(rect1, rect2, head)) {
-                //printf("overlap by 40 percent and deleted\n");
+                #if DEBUG
+                    printf("overlap by 40 percent and deleted\n");
+                #endif
                 rect2 = delete(rect2, head);
                 diff++;
                 count--;
@@ -170,7 +177,12 @@ void detectSingleScale(RgbImage* integral, RgbImage* integralsq, Cascade* classi
                     Feature feat = classifier->features[classifier->stages[i].nodeList[j].featind];
 
                     //sum in rectangle is D - B - C + A
-                    float totalFeatureVal = getFeatureVal(integral, feat, scale, x, y);
+                    float totalFeatureVal;
+                    #if VERSION == 0
+                        totalFeatureVal = getFeatureVal(integral, feat, scale, x, y);
+                    #elif VERSION == 1
+                        totalFeatureVal = getFeatureVal(integral, feat, VERSION, x, y);
+                    #endif
 
                     if (totalFeatureVal / area < classifier->stages[i].nodeList[j].threshold * stdev) {
                         stagePassThresh += classifier->stages[i].nodeList[j].weights[0];
@@ -184,7 +196,11 @@ void detectSingleScale(RgbImage* integral, RgbImage* integralsq, Cascade* classi
                 }
 
                 if ( i + 1 == classifier->stgNum) {
-                    head = push(head, window, x, y);
+                    #if VERSION == 0
+                        head = push(head, window, x, y);
+                    #elif VERSION == 1
+                        head = push(head, (int)(window * scale), x, y);
+                    #endif
                     count++;
                 }
             }
@@ -205,7 +221,7 @@ void approxDetectSingleScale(struct fann *ann, RgbImage* pxls, int window) {
     int y, x;
     for (y = 0; y < height - window; y++) {
         for (x = 0; x < width - window; x++) {
-            RgbImage* result = shrink(pxls, x, y, window, DEFSIZE, MODE);
+            RgbImage* result = shrink(pxls, x, y, window, window, DEFSIZE, DEFSIZE, MODE);
 
             if(result == NULL) {
                 return;
@@ -284,17 +300,22 @@ void detectMultiScale(RgbImage* pxls, Cascade* classifier) {
             // 2: recompute itegrals
             // 3: detection (pass scale 1, window classifier->dim)
 
-        float shrinkSize = (float)max_window;
-
+        int shrinkWidth = pxls->w;
+        int shrinkHeight = pxls->h;
+        int shrinkSize = max_window;
+        float scale = 1.0;
         while (shrinkSize > window) {
-            RgbImage* shrinked = shrink(pxls, 0, 0, max_window, (int)shrinkSize, MODE);
+            shrinkWidth /= SCALE_FACTOR;
+            shrinkHeight /= SCALE_FACTOR;
+            shrinkSize /= SCALE_FACTOR;
+            scale *= SCALE_FACTOR;
+            RgbImage* shrinked = shrink(pxls, 0, 0, pxls->w, pxls->h, shrinkWidth, shrinkHeight, MODE);
             RgbImage* integral = integralImage(shrinked, 0);
             RgbImage* integralsq = integralImage(shrinked, 1);
-            detectSingleScale(integral, integralsq, classifier, (int)window, 1);
+            detectSingleScale(integral, integralsq, classifier, (int)window, scale);
             freeRgbImage(shrinked);
             freeRgbImage(integral);
             freeRgbImage(integralsq);
-            shrinkSize = shrinkSize / SCALE_FACTOR;
         }
 
     #endif
@@ -305,7 +326,7 @@ void detectMultiScale(RgbImage* pxls, Cascade* classifier) {
         printf("Merging.\n");
         int diff = 1;
         while (diff > 0) {
-            diff = mergeRectangles();
+            diff = mergeRectangles(max_window);
         }
     #endif
 
