@@ -46,7 +46,6 @@ RgbImage* allocate(int width, int height) {
 // 2: downsampling
 // 3: maxpooling
 // 4: minpooling
-// 3, 4 wait to be implemented
 RgbImage* shrink(RgbImage* pxls, int x, int y, int width, int height, int scaleWidth, int scaleHeight, int mode) {
 	RgbImage* result = allocate(scaleWidth, scaleHeight);
 
@@ -87,9 +86,47 @@ RgbImage* shrink(RgbImage* pxls, int x, int y, int width, int height, int scaleW
 				result->pixels[i][j] = pxls->pixels[fixedx][fixedy];
 			}
 		}
-	} 
+	} else if (mode == 3) {
+		int k, l;
+		for (i = 0; i < scaleHeight; i++) {
+			for (j = 0; j < scaleWidth; j++) {
+				RgbPixel temp = {0.0, 0.0, 0.0};
+				for (k = 0; k < scale_factor; k++) {
+					for (l = 0; l < scale_factor; l++) {
+						int fixedx = i * scale_factor + x + k;
+						int fixedy = j * scale_factor + y + l;
 
+						temp.r = max(temp.r, pxls->pixels[fixedx][fixedy].r);
+						temp.g = max(temp.g, pxls->pixels[fixedx][fixedy].g);
+						temp.b = max(temp.b, pxls->pixels[fixedx][fixedy].b);
+					}
+				}
+				result->pixels[i][j].r = temp.r;
+				result->pixels[i][j].g = temp.g;
+				result->pixels[i][j].b = temp.b;
+			}
+		}
+	} else if (mode == 4) {
+		int k, l;
+		for (i = 0; i < scaleHeight; i++) {
+			for (j = 0; j < scaleWidth; j++) {
+				RgbPixel temp = {0.0, 0.0, 0.0};
+				for (k = 0; k < scale_factor; k++) {
+					for (l = 0; l < scale_factor; l++) {
+						int fixedx = i * scale_factor + x + k;
+						int fixedy = j * scale_factor + y + l;
 
+						temp.r = (temp.r == 0.0) ? pxls->pixels[fixedx][fixedy].r : min(temp.r, pxls->pixels[fixedx][fixedy].r);
+						temp.g = (temp.g == 0.0) ? pxls->pixels[fixedx][fixedy].g : min(temp.g, pxls->pixels[fixedx][fixedy].g);
+						temp.b = (temp.b == 0.0) ? pxls->pixels[fixedx][fixedy].b : min(temp.b, pxls->pixels[fixedx][fixedy].b);
+					}
+				}
+				result->pixels[i][j].r = temp.r;
+				result->pixels[i][j].g = temp.g;
+				result->pixels[i][j].b = temp.b;
+			}
+		}
+	}
 	return result;
 }
 

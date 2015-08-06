@@ -11,15 +11,19 @@
 #include "rgb_image.h"
 #include "shrink.h"
 
-#define DEBUG true
+#define DEBUG false
 
 #define VERSION 0
 //0: original viola jones algorithm
 //1: new thierry's way of implementation
 
+#define ADAPTIVE_STEP true
+//0: Adaptive step disabled (ver. 0 only)
+//1: Adaptive step enabled (ver. 0 only)
+
 #define APPROX false //turns on fann
 
-#define MERGE false //turns on merging
+#define MERGE true //turns on merging
 
 #define MODE 2
 // 1: downscaling
@@ -28,7 +32,7 @@
 // 4: minpooling
 
 // File paths
-#define INPIC "Images/gee.rgb" //picture file
+#define INPIC "Images/single_sm.rgb" //picture file
 #define NN "vision_3L_36N.net" //fann file
 
 // Viola Jones Algorithm parameters
@@ -124,21 +128,25 @@ int mergeRectangles(int filter) {
     int diff = 0;
     Face* rect1;
     Face* rect2;
+    Face* rect2prev;
     for(rect1 = head; rect1 != NULL; rect1 = rect1->next) {
         rect2 = rect1->next;
+        rect2prev = rect1;
         while(rect2 != NULL) {
             #if DEBUG
                 printf("(%d, %d, %d) | (%d, %d, %d)\n", rect1->window, rect1->x, rect1->y, rect2->window, rect2->x, rect2->y);
             #endif
 
-            if (overlap(rect1, rect2, head)) {
+            if (overlap(rect1, rect2)) {
                 #if DEBUG
                     printf("overlap by 40 percent and deleted\n");
                 #endif
-                rect2 = delete(rect2, head);
+                // rect2 = deleteNext(rect2prev);
+                rect2 = deleteNext(rect2prev);
                 diff++;
                 count--;
             } else {
+                rect2prev = rect2;
                 rect2 = rect2->next;
             }
         }
@@ -154,10 +162,25 @@ void detectSingleScale(RgbImage* integral, RgbImage* integralsq, Cascade* classi
     int height = integral->h;
     int area = window * window;
     int y, x;
+
+    int y_step_size, x_step_size;
+    #if VERSION == 0
+        #if ADAPTIVE_STEP
+            y_step_size = Y_STEP_SIZE;
+            x_step_size = X_STEP_SIZE;
+        #else
+            y_step_size = (int) (window*Y_STEP_SIZE*0.05);
+            x_step_size = (int) (window*X_STEP_SIZE*0.05);
+        #endif //ADAPTIVE_STEP
+    #elif VERSION == 1
+        y_step_size = Y_STEP_SIZE;
+        x_step_size = X_STEP_SIZE;
+    #endif //VERSION
+
     //slide the window along the y axis by Y_STEP_SIZE
-    for (y = 0; y < height - window; y += Y_STEP_SIZE) {
+    for (y = 0; y < height - window; y += y_step_size) {
         //slide the window along the x axis by X_STEP_SIZE
-        for (x = 0; x < width - window; x += X_STEP_SIZE) {
+        for (x = 0; x < width - window; x += x_step_size) {
 
             float mean = getMean(integral, x, y, window, area);
             float variance = getMean(integralsq, x, y, window, area) - (mean * mean);
@@ -181,7 +204,7 @@ void detectSingleScale(RgbImage* integral, RgbImage* integralsq, Cascade* classi
                     #if VERSION == 0
                         totalFeatureVal = getFeatureVal(integral, feat, scale, x, y);
                     #elif VERSION == 1
-                        totalFeatureVal = getFeatureVal(integral, feat, VERSION, x, y);
+                        totalFeatureVal = getFeatureVal(integral, feat, 1.0, x, y);
                     #endif
 
                     if (totalFeatureVal / area < classifier->stages[i].nodeList[j].threshold * stdev) {
@@ -199,7 +222,7 @@ void detectSingleScale(RgbImage* integral, RgbImage* integralsq, Cascade* classi
                     #if VERSION == 0
                         head = push(head, window, x, y);
                     #elif VERSION == 1
-                        head = push(head, (int)(window * scale), x, y);
+                        head = push(head, (int)(window * scale), (int)(x * scale), (int)(y * scale));
                     #endif
                     count++;
                 }
@@ -255,17 +278,13 @@ void detectMultiScale(RgbImage* pxls, Cascade* classifier) {
 
     #if VERSION == 0
 
-        RgbImage* integral;
-        RgbImage* integralsq;
-
-        struct fann *ann;
-
         #if APPROX
+            struct fann *ann;
             printf("Approximating.\n");
             ann = fann_create_from_file(NN);
         #else
-            integral = integralImage(pxls, 0);
-            integralsq = integralImage(pxls, 1);
+            RgbImage* integral = integralImage(pxls, 0);
+            RgbImage* integralsq = integralImage(pxls, 1);
             if(integral == NULL || integralsq == NULL) {
                 return;
             }

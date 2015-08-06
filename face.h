@@ -22,9 +22,9 @@ bool contains(Face* face, Face* head);
 
 bool equals(Face* rect1, Face* rect2);
 
-bool overlap(Face* rect1, Face* rect2, Face* head);
+bool overlap(Face* rect1, Face* rect2);
 
-Face* delete(Face* face, Face* head);
+Face* deleteNext(Face* node);
 
 void printfree(Face* head);
 
