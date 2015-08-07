@@ -6,7 +6,7 @@
 #include <string.h>
 #include <time.h>
 #include "face.h"
-#include "floatfann.h"
+#include "fann/include/floatfann.h"
 #include "parse.h"
 #include "rgb_image.h"
 #include "shrink.h"
@@ -31,7 +31,7 @@
 
 #define DEBUG false //turns on debugging information
 
-#define DATA true //turns on data collection
+#define DATA false //turns on data collection
 
 // File paths
 #define CASCADE "xml/ocv_clsfr.xml" //cascade file
