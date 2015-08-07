@@ -35,6 +35,6 @@ parse.o: parse.c parse.h FORCE
 	$(CC) $(CFLAGS) -c $< -o parse.o -I$(SCPATH) -L$(LIB) $(LINK)
 
 clean: FORCE
-	/bin/rm -f *.o *~ detect
+	rm -f *.o detect *.pyc
 
 FORCE: 
