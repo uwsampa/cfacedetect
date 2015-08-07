@@ -28,8 +28,12 @@ typedef struct Feature{
 typedef struct Node{
 	// threshold of the weak classifier
 	float threshold;
-	// indexes the feature
+	// Index for features
 	int featind;
+	//
+	// change from indexes the feature
+	// to a Feature Struct
+	Feature* feat;
 	// leaf weights
 	float weights[2];
 }Node;

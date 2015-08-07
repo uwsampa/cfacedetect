@@ -35,16 +35,25 @@ xmlXPathObjectPtr getnodeset (xmlDocPtr doc, xmlChar *xpath) {
 
 //freeing the cascade
 void freeCascade(Cascade* cas) {
-	int i;
+	int i, j, k;
 	for(i = 0; i < cas->stgNum; i++) {
+		for (j = 0; j < cas->stages[i].nodeNum; ++j)
+		{
+			for (k = 0; k < cas->stages[i].nodeList[j].feat->rectNum; ++k)
+			{
+				free(cas->stages[i].nodeList[j].feat->rectList);
+				cas->stages[i].nodeList[j].feat->rectList = NULL;
+			}
+			free(cas->stages[i].nodeList[j].feat);
+			cas->stages[i].nodeList[j].feat = NULL;
+		}
 		free(cas->stages[i].nodeList);
-	}
-	for(i = 0; i < cas->featNum; i++) {
-		free(cas->features[i].rectList);
+		cas->stages[i].nodeList = NULL;
 	}
 	free(cas->stages);
-	free(cas->features);
+	cas->stages = NULL;
 	free(cas);
+	cas = NULL;
 	printf("Cascade freed.\n");
 }
 
@@ -150,6 +159,37 @@ Cascade* loadCascade(char* path) {
 			xmlXPathFreeObject(result);
 		}
 	}
+
+	for (i = 0; i < stageNum; ++i)
+	{
+		for (j = 0; j < stages[i].nodeNum; ++j)
+		{
+			int index = stages[i].nodeList[j].featind;
+			Feature featAtIndex = features[index];
+			stages[i].nodeList[j].feat = (Feature *)malloc(sizeof(Feature));
+			// Copy the features into stages
+			stages[i].nodeList[j].feat->rectNum = featAtIndex.rectNum;
+			stages[i].nodeList[j].feat->rectList = (Rect *)malloc(sizeof(Rect) * featAtIndex.rectNum);
+			for (l = 0; l < featAtIndex.rectNum; ++l)
+			{
+				stages[i].nodeList[j].feat->rectList[l].width  = features[j].rectList[l].width;
+				stages[i].nodeList[j].feat->rectList[l].height = features[j].rectList[l].height;
+				stages[i].nodeList[j].feat->rectList[l].x      = features[j].rectList[l].x;
+				stages[i].nodeList[j].feat->rectList[l].y      = features[j].rectList[l].y;
+				stages[i].nodeList[j].feat->rectList[l].weight = features[j].rectList[l].weight;
+			}
+		}
+	}
+
+	// Free the temperary rectList and features
+	for(i = 0; i < featureNum; i++) {
+		// free rectList first
+		free(features[i].rectList);
+		features[i].rectList = NULL;
+	}
+	// free features second
+	free(features);
+	features = NULL;
 
 	xmlFreeDoc(doc);
 	xmlCleanupParser();
