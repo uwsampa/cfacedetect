@@ -32,7 +32,7 @@ typedef struct Node{
 	int featind;
 	//
 	// change from indexes the feature
-	// to a Feature Struct
+	// to one Feature Struct
 	Feature* feat;
 	// leaf weights
 	float weights[2];
@@ -60,7 +60,8 @@ typedef struct Cascade{
 	Stage* stages;
 	// array of featNum features (nodes)
 	// FIXME: remove feature list, should be under Node
-	Feature* features;
+	// FIXED
+	// Feature* features;
 }Cascade;
 
 

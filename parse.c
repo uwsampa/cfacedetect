@@ -57,6 +57,11 @@ void freeCascade(Cascade* cas) {
 	printf("Cascade freed.\n");
 }
 
+
+// There is a tiny error inside the loadCascade
+// Don't know where
+// But it is causing the detect to hit a seg fault 
+// When the cascade is too large
 //Loading from xml and returning the cascade ptr
 Cascade* loadCascade(char* path) {
 	xmlDocPtr doc;
@@ -90,7 +95,7 @@ Cascade* loadCascade(char* path) {
 	cas->stgNum = stageNum;
 	cas->featNum = featureNum;
 	cas->stages = stages;
-	cas->features = features;
+	// cas->features = features; 			// Should be removed
 	xmlXPathFreeObject(result);
 
 
@@ -136,9 +141,13 @@ Cascade* loadCascade(char* path) {
 	//second process the feature, done
 	int k, l;
 
+
+	// Start to reconstruct
+	// Assumption I: features are always sorted
+	// Assumption II: Node's feature number is not sorted
 	for (k = 0; k < featureNum; k++) {
 		//see how many rects in each feature
-		features[k].id = k;
+		// features[k].id = k;
 		sprintf(xpath, "%s%d%s", "/opencv_storage/cascade/features/_[", k+1, "]/rects/_");
 		result = getnodeset(doc, (xmlChar *)&xpath);
 		int rectNum = result->nodesetval->nodeNr;
@@ -160,23 +169,24 @@ Cascade* loadCascade(char* path) {
 		}
 	}
 
-	for (i = 0; i < stageNum; ++i)
+	int m, n, o;
+	for (m = 0; m < stageNum; ++m)
 	{
-		for (j = 0; j < stages[i].nodeNum; ++j)
+		for (n = 0; n < stages[m].nodeNum; ++n)
 		{
-			int index = stages[i].nodeList[j].featind;
-			Feature featAtIndex = features[index];
-			stages[i].nodeList[j].feat = (Feature *)malloc(sizeof(Feature));
+			int index = stages[m].nodeList[n].featind;
+			Feature featAtindex = features[index];
+			stages[m].nodeList[n].feat = (Feature *)malloc(sizeof(Feature));
 			// Copy the features into stages
-			stages[i].nodeList[j].feat->rectNum = featAtIndex.rectNum;
-			stages[i].nodeList[j].feat->rectList = (Rect *)malloc(sizeof(Rect) * featAtIndex.rectNum);
-			for (l = 0; l < featAtIndex.rectNum; ++l)
+			stages[m].nodeList[n].feat->rectNum = featAtindex.rectNum;
+			stages[m].nodeList[n].feat->rectList = (Rect *)malloc(sizeof(Rect) * featAtindex.rectNum);
+			for (o = 0; o < featAtindex.rectNum; ++o)
 			{
-				stages[i].nodeList[j].feat->rectList[l].width  = features[j].rectList[l].width;
-				stages[i].nodeList[j].feat->rectList[l].height = features[j].rectList[l].height;
-				stages[i].nodeList[j].feat->rectList[l].x      = features[j].rectList[l].x;
-				stages[i].nodeList[j].feat->rectList[l].y      = features[j].rectList[l].y;
-				stages[i].nodeList[j].feat->rectList[l].weight = features[j].rectList[l].weight;
+				stages[m].nodeList[n].feat->rectList[o].width  = featAtindex.rectList[o].width;
+				stages[m].nodeList[n].feat->rectList[o].height = featAtindex.rectList[o].height;
+				stages[m].nodeList[n].feat->rectList[o].x      = featAtindex.rectList[o].x;
+				stages[m].nodeList[n].feat->rectList[o].y      = featAtindex.rectList[o].y;
+				stages[m].nodeList[n].feat->rectList[o].weight = featAtindex.rectList[o].weight;
 			}
 		}
 	}
