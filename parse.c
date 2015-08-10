@@ -57,12 +57,9 @@ void freeCascade(Cascade* cas) {
 	printf("Cascade freed.\n");
 }
 
-
-// There is a tiny error inside the loadCascade
-// Don't know where
-// But it is causing the detect to hit a seg fault 
-// When the cascade is too large
-//Loading from xml and returning the cascade ptr
+// Loading from xml and returning the cascade ptr
+// Pre: Only one cascade in a xml file
+// Feature number of a node is not sorted
 Cascade* loadCascade(char* path) {
 	xmlDocPtr doc;
 	xmlXPathObjectPtr result;
@@ -141,13 +138,24 @@ Cascade* loadCascade(char* path) {
 	//second process the feature, done
 	int k, l;
 
-
 	// Start to reconstruct
-	// Assumption I: features are always sorted
-	// Assumption II: Node's feature number is not sorted
 	for (k = 0; k < featureNum; k++) {
-		//see how many rects in each feature
-		// features[k].id = k;
+		Feature* thisFeature = NULL;
+		for (i = 0; i < stageNum; ++i) {
+			for (j = 0 ; j < stages[i].nodeNum; ++j) {
+				if (k == stages[i].nodeList[j].featind)
+				{
+					thisFeature = stages[i].nodeList[j].feat;
+					printf("Get the feature I want at stage %d node %d\n", i, j);
+					// How to break out two for loop after got the feature
+				}
+				printf("Here at Node %d\n", j);
+			}
+			printf("Here at Stage %d\n", i);
+		}
+		thisFeature = (Feature *)malloc(sizeof(Feature));
+
+
 		sprintf(xpath, "%s%d%s", "/opencv_storage/cascade/features/_[", k+1, "]/rects/_");
 		result = getnodeset(doc, (xmlChar *)&xpath);
 		int rectNum = result->nodesetval->nodeNr;

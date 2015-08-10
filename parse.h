@@ -16,8 +16,8 @@ typedef struct Rect{
 // Feature object
 // FIXME: This could be merged with the Node object
 typedef struct Feature{
-	// Id of the feature (dead Amrita code)
-	int id;
+	// // Id of the feature (dead Amrita code)
+	// int id;
 	// Number of rectangles
 	int rectNum;
 	// List of rectList
@@ -58,10 +58,6 @@ typedef struct Cascade{
 	int featNum;
 	// array of stgNum stages
 	Stage* stages;
-	// array of featNum features (nodes)
-	// FIXME: remove feature list, should be under Node
-	// FIXED
-	// Feature* features;
 }Cascade;
 
 

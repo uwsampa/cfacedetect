@@ -226,7 +226,7 @@ void detectSingleScale(RgbImage* pxls, RgbImage* integral, RgbImage* integralsq,
 					// Feature feat = classifier->features[classifier->stages[i].nodeList[j].featind];
 					Feature feat = *(classifier->stages[i].nodeList[j].feat);
 
-					printf("Get to stage: %d, node: %d\n", i, j);
+					// printf("Get to stage: %d, node: %d\n", i, j);
 
 					//sum in rectangle is D - B - C + A
 					float totalFeatureVal;
