@@ -120,15 +120,15 @@ float getMean(RgbImage* integral, int x, int y, int window, int area) {
 		+ integral->pixels[y + window][x + window].r) / area;
 }
 
-//Return the feature value computed with the picture
-float getFeatureVal(RgbImage* integral, Feature feat, float scale, int x, int y) {
+//Return the Node value computed with the picture
+float getFeatureVal(RgbImage* integral, Node nodeWithRects, float scale, int x, int y) {
 	float totalFeatureVal = 0.0;
 	int i;
-	for (i = 0; i < feat.rectNum; i++) {
-		int rectx = (int)(feat.rectList[i].width * scale + 0.5);
-		int recty = (int)(feat.rectList[i].height * scale + 0.5);
-		int rectw = (int)(feat.rectList[i].x * scale + 0.5);
-		int recth = (int)(feat.rectList[i].y * scale + 0.5);
+	for (i = 0; i < nodeWithRects.rectNum; i++) {
+		int rectx = (int)(nodeWithRects.rectList[i].width * scale + 0.5);
+		int recty = (int)(nodeWithRects.rectList[i].height * scale + 0.5);
+		int rectw = (int)(nodeWithRects.rectList[i].x * scale + 0.5);
+		int recth = (int)(nodeWithRects.rectList[i].y * scale + 0.5);
 
 		int w1x = min(x + rectx, integral->w - 1);
 		int w1y = min(y + recty, integral->h - 1);
@@ -139,7 +139,7 @@ float getFeatureVal(RgbImage* integral, Feature feat, float scale, int x, int y)
 		int w4x = min(x + rectx + rectw, integral->w - 1);
 		int w4y = min(y + recty + recth, integral->h - 1);
 
-		totalFeatureVal += feat.rectList[i].weight * ( integral->pixels[w1y][w1x].r
+		totalFeatureVal += nodeWithRects.rectList[i].weight * ( integral->pixels[w1y][w1x].r
 			- integral->pixels[w2y][w2x].r - integral->pixels[w3y][w3x].r + integral->pixels[w4y][w4x].r);
 	}
 	return totalFeatureVal;
@@ -224,15 +224,15 @@ void detectSingleScale(RgbImage* pxls, RgbImage* integral, RgbImage* integralsq,
 				//for each classifier in the stage
 				for (j = 0; j < classifier->stages[i].nodeNum; j++) {
 					// Feature feat = classifier->features[classifier->stages[i].nodeList[j].featind];
-					Feature feat = *(classifier->stages[i].nodeList[j].feat);
+					Node thisNode = classifier->stages[i].nodeList[j];
 					// printf("Get to stage: %d, node: %d\n", i, j);
 
 					//sum in rectangle is D - B - C + A
 					float totalFeatureVal;
 					#if VERSION == 0
-						totalFeatureVal = getFeatureVal(integral, feat, scale, x, y);
+						totalFeatureVal = getFeatureVal(integral, thisNode, scale, x, y);
 					#elif VERSION == 1
-						totalFeatureVal = getFeatureVal(integral, feat, 1.0, x, y);
+						totalFeatureVal = getFeatureVal(integral, thisNode, 1.0, x, y);
 					#endif
 
 					if (totalFeatureVal / area < classifier->stages[i].nodeList[j].threshold * stdev) {

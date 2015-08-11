@@ -13,27 +13,16 @@ typedef struct Rect{
 	int weight;
 }Rect;
 
-// Feature object
-// FIXME: This could be merged with the Node object
-typedef struct Feature{
-	// // Id of the feature (dead Amrita code)
-	// int id;
-	// Number of rectangles
-	int rectNum;
-	// List of rectList
-	Rect* rectList;
-}Feature;
-
 // Node struct (weak classifier)
 typedef struct Node{
 	// threshold of the weak classifier
 	float threshold;
 	// Index for features
 	int featind;
-	//
-	// change from indexes the feature
-	// to one Feature Struct
-	Feature* feat;
+	// Number of rectangles
+	int rectNum;
+	// List of rectList
+	Rect rectList[3];
 	// leaf weights
 	float weights[2];
 }Node;

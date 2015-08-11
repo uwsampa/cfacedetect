@@ -35,18 +35,8 @@ xmlXPathObjectPtr getnodeset (xmlDocPtr doc, xmlChar *xpath) {
 
 //freeing the cascade
 void freeCascade(Cascade* cas) {
-	int i, j, k;
+	int i;
 	for(i = 0; i < cas->stgNum; i++) {
-		for (j = 0; j < cas->stages[i].nodeNum; ++j)
-		{
-			for (k = 0; k < cas->stages[i].nodeList[j].feat->rectNum; ++k)
-			{
-				free(cas->stages[i].nodeList[j].feat->rectList);
-				cas->stages[i].nodeList[j].feat->rectList = NULL;
-			}
-			free(cas->stages[i].nodeList[j].feat);
-			cas->stages[i].nodeList[j].feat = NULL;
-		}
 		free(cas->stages[i].nodeList);
 		cas->stages[i].nodeList = NULL;
 	}
@@ -75,7 +65,6 @@ Cascade* loadCascade(char* path) {
 	int featureNum;
 
 	Stage* stages = NULL;
-	// Feature* features = NULL;
 
 	result = getnodeset(doc, (xmlChar *)"/opencv_storage/cascade/stages/_");
 	stageNum = result->nodesetval->nodeNr;
@@ -84,7 +73,6 @@ Cascade* loadCascade(char* path) {
 
 	result = getnodeset(doc, (xmlChar *)"/opencv_storage/cascade/features/_");
 	featureNum = result->nodesetval->nodeNr;
-	// features = (Feature *)malloc(sizeof(Feature) * featureNum);
 	xmlXPathFreeObject(result);
 
 	result = getnodeset(doc, (xmlChar *)"/opencv_storage/cascade/height");
@@ -93,7 +81,6 @@ Cascade* loadCascade(char* path) {
 	cas->stgNum = stageNum;
 	cas->featNum = featureNum;
 	cas->stages = stages;
-	// cas->features = features; 			// Should be removed
 	xmlXPathFreeObject(result);
 
 	char xpath[256];
@@ -131,20 +118,16 @@ Cascade* loadCascade(char* path) {
 			stages[i].nodeList[j].weights[0] = atof(strtok(NULL, " "));
 			stages[i].nodeList[j].weights[1] = atof(strtok(NULL, ""));
 			xmlXPathFreeObject(result);
-			stages[i].nodeList[j].feat = (Feature *)malloc(sizeof(Feature));
-			if (NULL == stages[i].nodeList[j].feat) { 
-				printf("memory allocation for feature failed.\n"); 
-			}
 		}
 	}
 
 	// Start to reconstruct
 	for (i = 0; i < featureNum; ++i) {
-		Feature* thisFeature = NULL;
+		Node* thisNode = NULL;
 		for (j = 0; j < stageNum; ++j) {
 			for (k = 0 ; k < stages[j].nodeNum; ++k) {
 				if (i == stages[j].nodeList[k].featind) {
-					thisFeature = stages[j].nodeList[k].feat;
+					thisNode = &(stages[j].nodeList[k]);
 					k = stages[j].nodeNum;
 					j = stageNum;
 					break;
@@ -155,56 +138,23 @@ Cascade* loadCascade(char* path) {
 		sprintf(xpath, "%s%d%s", "/opencv_storage/cascade/features/_[", i+1, "]/rects/_");
 		result = getnodeset(doc, (xmlChar *)&xpath);
 		int rectNum = result->nodesetval->nodeNr;
-		thisFeature->rectNum = rectNum;
+		thisNode->rectNum = rectNum;
 		xmlXPathFreeObject(result);
-		thisFeature->rectList = (Rect *)malloc(sizeof(Rect) * rectNum);
 		for (j = 0; j < rectNum; ++j) {
 			//construct each rects for feature's rectlist
 			sprintf(xpath, "%s%d%s%d%s", "/opencv_storage/cascade/features/_[", i+1, "]/rects/_[", j+1, "]");
 			result = getnodeset(doc, (xmlChar *)xpath);
 			char *line = VALUE(result);
 			strtok(line, " ");
-			thisFeature->rectList[j].width = atoi(strtok(NULL, " "));
-			thisFeature->rectList[j].height = atoi(strtok(NULL, " "));
-			thisFeature->rectList[j].x = atoi(strtok(NULL, " "));
-			thisFeature->rectList[j].y = atoi(strtok(NULL, " "));
-			thisFeature->rectList[j].weight = atoi(strtok(NULL, "."));
+			thisNode->rectList[j].width = atoi(strtok(NULL, " "));
+			thisNode->rectList[j].height = atoi(strtok(NULL, " "));
+			thisNode->rectList[j].x = atoi(strtok(NULL, " "));
+			thisNode->rectList[j].y = atoi(strtok(NULL, " "));
+			thisNode->rectList[j].weight = atoi(strtok(NULL, "."));
 			xmlXPathFreeObject(result);
 		}
-		thisFeature = NULL;
+		thisNode = NULL;
 	}
-
-	// int m, n, o;
-	// for (m = 0; m < stageNum; ++m)
-	// {
-	// 	for (n = 0; n < stages[m].nodeNum; ++n)
-	// 	{
-	// 		int index = stages[m].nodeList[n].featind;
-	// 		Feature featAtindex = features[index];
-	// 		stages[m].nodeList[n].feat = (Feature *)malloc(sizeof(Feature));
-	// 		// Copy the features into stages
-	// 		stages[m].nodeList[n].feat->rectNum = featAtindex.rectNum;
-	// 		stages[m].nodeList[n].feat->rectList = (Rect *)malloc(sizeof(Rect) * featAtindex.rectNum);
-	// 		for (o = 0; o < featAtindex.rectNum; ++o)
-	// 		{
-	// 			stages[m].nodeList[n].feat->rectList[o].width  = featAtindex.rectList[o].width;
-	// 			stages[m].nodeList[n].feat->rectList[o].height = featAtindex.rectList[o].height;
-	// 			stages[m].nodeList[n].feat->rectList[o].x      = featAtindex.rectList[o].x;
-	// 			stages[m].nodeList[n].feat->rectList[o].y      = featAtindex.rectList[o].y;
-	// 			stages[m].nodeList[n].feat->rectList[o].weight = featAtindex.rectList[o].weight;
-	// 		}
-	// 	}
-	// }
-
-	// // Free the temperary rectList and features
-	// for(i = 0; i < featureNum; i++) {
-	// 	// free rectList first
-	// 	free(features[i].rectList);
-	// 	features[i].rectList = NULL;
-	// }
-	// // free features second
-	// free(features);
-	// features = NULL;
 
 	xmlFreeDoc(doc);
 	xmlCleanupParser();
