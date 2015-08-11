@@ -96,7 +96,6 @@ Cascade* loadCascade(char* path) {
 	// cas->features = features; 			// Should be removed
 	xmlXPathFreeObject(result);
 
-
 	char xpath[256];
 	//first process the stage and its nodes, done
 
@@ -132,6 +131,10 @@ Cascade* loadCascade(char* path) {
 			stages[i].nodeList[j].weights[0] = atof(strtok(NULL, " "));
 			stages[i].nodeList[j].weights[1] = atof(strtok(NULL, ""));
 			xmlXPathFreeObject(result);
+			stages[i].nodeList[j].feat = (Feature *)malloc(sizeof(Feature));
+			if (NULL == stages[i].nodeList[j].feat) { 
+				printf("memory allocation for feature failed.\n"); 
+			}
 		}
 	}
 
@@ -148,7 +151,6 @@ Cascade* loadCascade(char* path) {
 				}
 			}
 		}
-		thisFeature = (Feature *)malloc(sizeof(Feature));
 
 		sprintf(xpath, "%s%d%s", "/opencv_storage/cascade/features/_[", i+1, "]/rects/_");
 		result = getnodeset(doc, (xmlChar *)&xpath);
@@ -158,7 +160,7 @@ Cascade* loadCascade(char* path) {
 		thisFeature->rectList = (Rect *)malloc(sizeof(Rect) * rectNum);
 		for (j = 0; j < rectNum; ++j) {
 			//construct each rects for feature's rectlist
-			sprintf(xpath, "%s%d%s%d%s", "/opencv_storage/cascade/features/_[", k+1, "]/rects/_[", j+1, "]");
+			sprintf(xpath, "%s%d%s%d%s", "/opencv_storage/cascade/features/_[", i+1, "]/rects/_[", j+1, "]");
 			result = getnodeset(doc, (xmlChar *)xpath);
 			char *line = VALUE(result);
 			strtok(line, " ");
@@ -169,6 +171,7 @@ Cascade* loadCascade(char* path) {
 			thisFeature->rectList[j].weight = atoi(strtok(NULL, "."));
 			xmlXPathFreeObject(result);
 		}
+		thisFeature = NULL;
 	}
 
 	// int m, n, o;
