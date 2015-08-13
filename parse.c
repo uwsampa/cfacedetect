@@ -49,7 +49,9 @@ void freeCascade(Cascade* cas) {
 
 // Loading from xml and returning the cascade ptr
 // Pre: Only one cascade in a xml file
-// Feature number of a node is not sorted
+// 		Feature number of a node could be unsorted
+// Post: Create a complete cascade object 
+//		Filled by feature nodes and threshold
 Cascade* loadCascade(char* path) {
 	int i, j, k;
 	xmlDocPtr doc;
@@ -84,8 +86,8 @@ Cascade* loadCascade(char* path) {
 	xmlXPathFreeObject(result);
 
 	char xpath[256];
-	//first process the stage and its nodes, done
 
+	// Filling the cascade with stages and nodes
 	for(i = 0; i < stageNum; i++) {
 		//stage threshold
 		sprintf(xpath, "%s%d%s", "/opencv_storage/cascade/stages/_[", i+1, "]/stageThreshold");
@@ -121,7 +123,7 @@ Cascade* loadCascade(char* path) {
 		}
 	}
 
-	// Start to reconstruct
+	// Filling the nodes with rectangles from the features
 	for (i = 0; i < featureNum; ++i) {
 		Node* thisNode = NULL;
 		for (j = 0; j < stageNum; ++j) {
