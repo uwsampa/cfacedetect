@@ -13,23 +13,17 @@ typedef struct Rect{
 	int weight;
 }Rect;
 
-/// Feature object
-typedef struct Feature{
-	/// Id of the feature (dead Amrita code)
-	int id;
-	/// Number of rectangles
-	int rectNum;
-	/// List of rectList
-	Rect* rectList;
-}Feature;
-
-/// Node struct (weak classifier)
+// Node struct (weak classifier)
 typedef struct Node{
-	/// threshold of the weak classifier
+	// threshold of the weak classifier
 	float threshold;
-	/// indexes the feature
+	// Index for features
 	int featind;
-	/// leaf weights
+	// Number of rectangles
+	int rectNum;
+	// List of rectList
+	Rect rectList[3];
+	// leaf weights
 	float weights[2];
 }Node;
 
@@ -53,9 +47,6 @@ typedef struct Cascade{
 	int featNum;
 	/// array of stgNum stages
 	Stage* stages;
-	/// array of featNum features (nodes)
-	// FIXME: remove feature list, should be under Node
-	Feature* features;
 }Cascade;
 
 
