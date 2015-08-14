@@ -85,12 +85,29 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <li><code>git clone git@github.com:uwsampa/cfacedetect.git</code></li>
 </ul>
 </li>
-<li>Type <code>make</code> to compile it. Make sure libxml2 and fann is installed.</li>
-<li>Run <code>./detect &lt;rgb filename&gt;</code> for face detection.</li>
+<li>Type <code>make</code> to compile it. Make sure libxml2 and fann is installed.<ul>
+<li><a href="http://leenissen.dk/fann/wp/">FANN</a></li>
+<li><a href="http://www.xmlsoft.org/">libxml2</a></li>
+</ul>
+</li>
+<li>Run <code>./detect &lt;rgb filename&gt;</code> for face detection.<ul>
+<li>make sure turns off DATA flag in <a class="el" href="detect_8c.html">detect.c</a></li>
+<li>turns on APPROX flag for fann activation</li>
+<li>turns on DEBUG flag for debug info</li>
+<li>turns on ADAPTIVE_STEP flag for adaptive steping</li>
+<li>switch version of face detection with VERSION</li>
+</ul>
+</li>
 <li>Run <code>python <a class="el" href="data_8py.html">data.py</a> &lt;directory&gt; &lt;output&gt;</code> for data collection.<ul>
 <li>make sure turns on DATA flag in <a class="el" href="detect_8c.html">detect.c</a>.</li>
 </ul>
 </li>
+<li>Run <code>python <a class="el" href="compare_8py.html">compare.py</a> &lt;directory&gt;</code> for compare results with python face detection<ul>
+<li><a href="https://github.com/uwsampa/facedetect">Python facedetect</a></li>
+<li>make sure facedetect is on the same level as cfacedetect, otherwise change the directory path</li>
+</ul>
+</li>
+<li><code>doxygen config</code> to generate documentations</li>
 </ol>
 <p>Note: detect only works for rgb picture files</p>
 <p>Use <a class="el" href="torgb_8py.html">torgb.py</a> for image conversion.</p><ul>

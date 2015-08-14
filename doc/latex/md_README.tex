@@ -5,11 +5,28 @@
 \item {\ttfamily git clone git@github.\+com\+:uwsampa/cfacedetect.\+git}
 \end{DoxyItemize}
 \item Type {\ttfamily make} to compile it. Make sure libxml2 and fann is installed.
+\begin{DoxyItemize}
+\item \href{http://leenissen.dk/fann/wp/}{\tt F\+A\+N\+N}
+\item \href{http://www.xmlsoft.org/}{\tt libxml2}
+\end{DoxyItemize}
 \item Run {\ttfamily ./detect $<$rgb filename$>$} for face detection.
+\begin{DoxyItemize}
+\item make sure turns off D\+A\+T\+A flag in \hyperlink{detect_8c}{detect.\+c}
+\item turns on A\+P\+P\+R\+O\+X flag for fann activation
+\item turns on D\+E\+B\+U\+G flag for debug info
+\item turns on A\+D\+A\+P\+T\+I\+V\+E\+\_\+\+S\+T\+E\+P flag for adaptive steping
+\item switch version of face detection with V\+E\+R\+S\+I\+O\+N
+\end{DoxyItemize}
 \item Run {\ttfamily python \hyperlink{data_8py}{data.\+py} $<$directory$>$ $<$output$>$} for data collection.
 \begin{DoxyItemize}
 \item make sure turns on D\+A\+T\+A flag in \hyperlink{detect_8c}{detect.\+c}.
 \end{DoxyItemize}
+\item Run {\ttfamily python \hyperlink{compare_8py}{compare.\+py} $<$directory$>$} for compare results with python face detection
+\begin{DoxyItemize}
+\item \href{https://github.com/uwsampa/facedetect}{\tt Python facedetect}
+\item make sure facedetect is on the same level as cfacedetect, otherwise change the directory path
+\end{DoxyItemize}
+\item {\ttfamily doxygen config} to generate documentations
 \end{DoxyEnumerate}
 
 Note\+: detect only works for rgb picture files
