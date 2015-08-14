@@ -7,20 +7,20 @@
 #define min(X, Y)  ((X) < (Y) ? (X) : (Y))
 #define max(X, Y)  ((X) > (Y) ? (X) : (Y))
 
-//Structure for storing a face with x, y and window size
+/// Linked list structure for storing a face with x, y and window size
 typedef struct Face {
+	/// window size
     int window;
+    /// x coordinate
     int x;
+    /// y coordinate
     int y;
+    /// links to the next face
     struct Face* next;
 } Face;
 
 
 Face* push(Face* head, int window, int x, int y);
-
-bool contains(Face* face, Face* head);
-
-bool equals(Face* rect1, Face* rect2);
 
 bool overlap(Face* rect1, Face* rect2);
 

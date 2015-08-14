@@ -1,0 +1,66 @@
+\hypertarget{shrink_8h}{}\section{shrink.\+h File Reference}
+\label{shrink_8h}\index{shrink.\+h@{shrink.\+h}}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{structRgbImage}{Rgb\+Image} $\ast$ \hyperlink{shrink_8h_a2c7e67568f44f2215f78268683fb6087}{allocate} (int width, int height)
+\item 
+\hyperlink{structRgbImage}{Rgb\+Image} $\ast$ \hyperlink{shrink_8h_a6bafefeafaa25156c6efeab18abec0eb}{shrink} (\hyperlink{structRgbImage}{Rgb\+Image} $\ast$pxls, int x, int y, int Orig\+Width, int Orig\+Height, int scale\+Width, int scale\+Height, int mode)
+\end{DoxyCompactItemize}
+
+
+\subsection{Function Documentation}
+\hypertarget{shrink_8h_a2c7e67568f44f2215f78268683fb6087}{}\index{shrink.\+h@{shrink.\+h}!allocate@{allocate}}
+\index{allocate@{allocate}!shrink.\+h@{shrink.\+h}}
+\subsubsection[{allocate(int width, int height)}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Rgb\+Image}$\ast$ allocate (
+\begin{DoxyParamCaption}
+\item[{int}]{width, }
+\item[{int}]{height}
+\end{DoxyParamCaption}
+)}\label{shrink_8h_a2c7e67568f44f2215f78268683fb6087}
+Allocates memory for a \hyperlink{structRgbImage}{Rgb\+Image}. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em width} & the width of \hyperlink{structRgbImage}{Rgb\+Image} \\
+\hline
+\mbox{\tt in}  & {\em height} & the height of \hyperlink{structRgbImage}{Rgb\+Image} \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the allocated pointer 
+\end{DoxyReturn}
+\hypertarget{shrink_8h_a6bafefeafaa25156c6efeab18abec0eb}{}\index{shrink.\+h@{shrink.\+h}!shrink@{shrink}}
+\index{shrink@{shrink}!shrink.\+h@{shrink.\+h}}
+\subsubsection[{shrink(\+Rgb\+Image $\ast$pxls, int x, int y, int Orig\+Width, int Orig\+Height, int scale\+Width, int scale\+Height, int mode)}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Rgb\+Image}$\ast$ shrink (
+\begin{DoxyParamCaption}
+\item[{{\bf Rgb\+Image} $\ast$}]{pxls, }
+\item[{int}]{x, }
+\item[{int}]{y, }
+\item[{int}]{width, }
+\item[{int}]{height, }
+\item[{int}]{scale\+Width, }
+\item[{int}]{scale\+Height, }
+\item[{int}]{mode}
+\end{DoxyParamCaption}
+)}\label{shrink_8h_a6bafefeafaa25156c6efeab18abec0eb}
+This shrinks a image of size starting from x, y with width and height to scale size image. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em pxls} & the image to be shrinked \\
+\hline
+\mbox{\tt in}  & {\em x} & the x coordinate \\
+\hline
+\mbox{\tt in}  & {\em y} & the y coordinate \\
+\hline
+\mbox{\tt in}  & {\em width} & the selected area\textquotesingle{}s width \\
+\hline
+\mbox{\tt in}  & {\em height} & the selected area\textquotesingle{}s height \\
+\hline
+\mbox{\tt in}  & {\em scale\+Width} & width after shrinking \\
+\hline
+\mbox{\tt in}  & {\em scale\+Height} & height after shrinking \\
+\hline
+\mbox{\tt in}  & {\em mode} & mode to perform shrinking\mbox{[}1\+: downscaling 2\+: downsampling 3\+: maxpooling 4\+: minpooling\mbox{]} \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the shrinked image. 
+\end{DoxyReturn}

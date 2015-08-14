@@ -1,0 +1,135 @@
+\hypertarget{rgb__image_8h}{}\section{rgb\+\_\+image.\+h File Reference}
+\label{rgb__image_8h}\index{rgb\+\_\+image.\+h@{rgb\+\_\+image.\+h}}
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structRgbPixel}{Rgb\+Pixel}
+\begin{DoxyCompactList}\small\item\em Struct storing rgb pixel value. \end{DoxyCompactList}\item 
+struct \hyperlink{structRgbImage}{Rgb\+Image}
+\begin{DoxyCompactList}\small\item\em Struct storing rgb image. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{rgb__image_8h_a8195a86b6d75b9a3939505e8bb50021e}{min}(X,  Y)~((X) $<$ (Y) ? (X) \+: (Y))
+\item 
+\#define \hyperlink{rgb__image_8h_ab95f7757e11b270d27b95ec0d8e798b5}{max}(X,  Y)~((X) $>$ (Y) ? (X) \+: (Y))
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{rgb__image_8h_ae3a026f050411442e71cd2a02400c89b}{init\+Rgb\+Image} (\hyperlink{structRgbImage}{Rgb\+Image} $\ast$image)
+\item 
+int \hyperlink{rgb__image_8h_a65d5c09a357898277f2e73ceb70d5cf6}{load\+Rgb\+Image} (const char $\ast$file\+Name, \hyperlink{structRgbImage}{Rgb\+Image} $\ast$image)
+\item 
+int \hyperlink{rgb__image_8h_a2f7a3cded364689a6954958088996f73}{save\+Rgb\+Image} (\hyperlink{structRgbImage}{Rgb\+Image} $\ast$image, const char $\ast$file\+Name, float \hyperlink{rgb__image_8h_afe8fa075f95f34072a4a5726d339cd91}{grayscale})
+\item 
+void \hyperlink{rgb__image_8h_a78deaae064f2ceada860950b40c70c89}{free\+Rgb\+Image} (\hyperlink{structRgbImage}{Rgb\+Image} $\ast$image)
+\item 
+void \hyperlink{rgb__image_8h_a2679f132bdfb8a69820b28d1662890c7}{make\+Grayscale} (\hyperlink{structRgbImage}{Rgb\+Image} $\ast$rgb\+Image)
+\item 
+void \hyperlink{rgb__image_8h_afe8fa075f95f34072a4a5726d339cd91}{grayscale} (\hyperlink{structRgbImage}{Rgb\+Image} $\ast$image)
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{rgb__image_8h_ab95f7757e11b270d27b95ec0d8e798b5}{}\index{rgb\+\_\+image.\+h@{rgb\+\_\+image.\+h}!max@{max}}
+\index{max@{max}!rgb\+\_\+image.\+h@{rgb\+\_\+image.\+h}}
+\subsubsection[{max}]{\setlength{\rightskip}{0pt plus 5cm}\#define max(
+\begin{DoxyParamCaption}
+\item[{}]{X, }
+\item[{}]{Y}
+\end{DoxyParamCaption}
+)~((X) $>$ (Y) ? (X) \+: (Y))}\label{rgb__image_8h_ab95f7757e11b270d27b95ec0d8e798b5}
+\hypertarget{rgb__image_8h_a8195a86b6d75b9a3939505e8bb50021e}{}\index{rgb\+\_\+image.\+h@{rgb\+\_\+image.\+h}!min@{min}}
+\index{min@{min}!rgb\+\_\+image.\+h@{rgb\+\_\+image.\+h}}
+\subsubsection[{min}]{\setlength{\rightskip}{0pt plus 5cm}\#define min(
+\begin{DoxyParamCaption}
+\item[{}]{X, }
+\item[{}]{Y}
+\end{DoxyParamCaption}
+)~((X) $<$ (Y) ? (X) \+: (Y))}\label{rgb__image_8h_a8195a86b6d75b9a3939505e8bb50021e}
+
+
+\subsection{Function Documentation}
+\hypertarget{rgb__image_8h_a78deaae064f2ceada860950b40c70c89}{}\index{rgb\+\_\+image.\+h@{rgb\+\_\+image.\+h}!free\+Rgb\+Image@{free\+Rgb\+Image}}
+\index{free\+Rgb\+Image@{free\+Rgb\+Image}!rgb\+\_\+image.\+h@{rgb\+\_\+image.\+h}}
+\subsubsection[{free\+Rgb\+Image(\+Rgb\+Image $\ast$image)}]{\setlength{\rightskip}{0pt plus 5cm}void free\+Rgb\+Image (
+\begin{DoxyParamCaption}
+\item[{{\bf Rgb\+Image} $\ast$}]{image}
+\end{DoxyParamCaption}
+)}\label{rgb__image_8h_a78deaae064f2ceada860950b40c70c89}
+Free rgb image from memory 
+\begin{DoxyParams}{Parameters}
+{\em image} & image to be freed \\
+\hline
+\end{DoxyParams}
+\hypertarget{rgb__image_8h_afe8fa075f95f34072a4a5726d339cd91}{}\index{rgb\+\_\+image.\+h@{rgb\+\_\+image.\+h}!grayscale@{grayscale}}
+\index{grayscale@{grayscale}!rgb\+\_\+image.\+h@{rgb\+\_\+image.\+h}}
+\subsubsection[{grayscale(\+Rgb\+Image $\ast$image)}]{\setlength{\rightskip}{0pt plus 5cm}void grayscale (
+\begin{DoxyParamCaption}
+\item[{{\bf Rgb\+Image} $\ast$}]{image}
+\end{DoxyParamCaption}
+)}\label{rgb__image_8h_afe8fa075f95f34072a4a5726d339cd91}
+Alter the image to grayscale 
+\begin{DoxyParams}{Parameters}
+{\em image} & rgb image to be grayscaled \\
+\hline
+\end{DoxyParams}
+\hypertarget{rgb__image_8h_ae3a026f050411442e71cd2a02400c89b}{}\index{rgb\+\_\+image.\+h@{rgb\+\_\+image.\+h}!init\+Rgb\+Image@{init\+Rgb\+Image}}
+\index{init\+Rgb\+Image@{init\+Rgb\+Image}!rgb\+\_\+image.\+h@{rgb\+\_\+image.\+h}}
+\subsubsection[{init\+Rgb\+Image(\+Rgb\+Image $\ast$image)}]{\setlength{\rightskip}{0pt plus 5cm}void init\+Rgb\+Image (
+\begin{DoxyParamCaption}
+\item[{{\bf Rgb\+Image} $\ast$}]{image}
+\end{DoxyParamCaption}
+)}\label{rgb__image_8h_ae3a026f050411442e71cd2a02400c89b}
+Initialize rgb image 
+\begin{DoxyParams}{Parameters}
+{\em image} & the image to be initialized \\
+\hline
+\end{DoxyParams}
+\hypertarget{rgb__image_8h_a65d5c09a357898277f2e73ceb70d5cf6}{}\index{rgb\+\_\+image.\+h@{rgb\+\_\+image.\+h}!load\+Rgb\+Image@{load\+Rgb\+Image}}
+\index{load\+Rgb\+Image@{load\+Rgb\+Image}!rgb\+\_\+image.\+h@{rgb\+\_\+image.\+h}}
+\subsubsection[{load\+Rgb\+Image(const char $\ast$file\+Name, Rgb\+Image $\ast$image)}]{\setlength{\rightskip}{0pt plus 5cm}int load\+Rgb\+Image (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{file\+Name, }
+\item[{{\bf Rgb\+Image} $\ast$}]{image}
+\end{DoxyParamCaption}
+)}\label{rgb__image_8h_a65d5c09a357898277f2e73ceb70d5cf6}
+Load rgb image from file\+Name and store in image 
+\begin{DoxyParams}{Parameters}
+{\em file\+Name} & name of image file \\
+\hline
+{\em image} & place to store the image file \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+1 if load success, 0 otherwise 
+\end{DoxyReturn}
+\hypertarget{rgb__image_8h_a2679f132bdfb8a69820b28d1662890c7}{}\index{rgb\+\_\+image.\+h@{rgb\+\_\+image.\+h}!make\+Grayscale@{make\+Grayscale}}
+\index{make\+Grayscale@{make\+Grayscale}!rgb\+\_\+image.\+h@{rgb\+\_\+image.\+h}}
+\subsubsection[{make\+Grayscale(\+Rgb\+Image $\ast$rgb\+Image)}]{\setlength{\rightskip}{0pt plus 5cm}void make\+Grayscale (
+\begin{DoxyParamCaption}
+\item[{{\bf Rgb\+Image} $\ast$}]{rgb\+Image}
+\end{DoxyParamCaption}
+)}\label{rgb__image_8h_a2679f132bdfb8a69820b28d1662890c7}
+\hypertarget{rgb__image_8h_a2f7a3cded364689a6954958088996f73}{}\index{rgb\+\_\+image.\+h@{rgb\+\_\+image.\+h}!save\+Rgb\+Image@{save\+Rgb\+Image}}
+\index{save\+Rgb\+Image@{save\+Rgb\+Image}!rgb\+\_\+image.\+h@{rgb\+\_\+image.\+h}}
+\subsubsection[{save\+Rgb\+Image(\+Rgb\+Image $\ast$image, const char $\ast$file\+Name, float grayscale)}]{\setlength{\rightskip}{0pt plus 5cm}int save\+Rgb\+Image (
+\begin{DoxyParamCaption}
+\item[{{\bf Rgb\+Image} $\ast$}]{image, }
+\item[{const char $\ast$}]{file\+Name, }
+\item[{float}]{scale}
+\end{DoxyParamCaption}
+)}\label{rgb__image_8h_a2f7a3cded364689a6954958088996f73}
+Save and output the rgb image to file\+Name 
+\begin{DoxyParams}{Parameters}
+{\em image} & rgb image to be saved \\
+\hline
+{\em filename} & filename to be stored in \\
+\hline
+{\em scale} & scale to adjust the picture pixel value \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+1 if success, 0 otherwise 
+\end{DoxyReturn}

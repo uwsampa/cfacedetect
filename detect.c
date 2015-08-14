@@ -11,41 +11,65 @@
 #include "rgb_image.h"
 #include "shrink.h"
 
+/** Version selection
+  * 0: original viola jones algorithm
+  * 1: new thierry's way of implementation
+  */
 #define VERSION 0
-//0: original viola jones algorithm
-//1: new thierry's way of implementation
 
+
+/** Turns on adaptive step for the algorithm
+  * false: Adaptive step disabled (ver. 0 only)
+  * true: Adaptive step enabled (ver. 0 only)
+  */
 #define ADAPTIVE_STEP false
-//false: Adaptive step disabled (ver. 0 only)
-//true: Adaptive step enabled (ver. 0 only)
 
-#define APPROX false //turns on fann
 
-#define MERGE true //turns on merging
+/// Turns on FANN evaluation
+#define APPROX false 
 
+/// Turns on merging when collecting results
+#define MERGE true
+
+/** Scales image in 4 modes
+  * 1: downscaling
+  * 2: downsampling
+  * 3: maxpooling
+  * 4: minpooling
+  */
 #define MODE 2
-// 1: downscaling
-// 2: downsampling
-// 3: maxpooling
-// 4: minpooling
 
-#define DEBUG false //turns on debugging information
+///Turns on debugging information
+#define DEBUG false
 
-#define DATA true //turns on data collection
+/// Turns on data collection
+#define DATA false
 
-// File paths
-#define CASCADE "xml/ocv_clsfr.xml" //cascade file
-#define INPIC "Images/single.rgb" //picture file
-#define NN "vision_3L_36N.net" //fann file
+/// HAAR cascade file path
+#define CASCADE "xml/ocv_clsfr.xml"
 
-// Viola Jones Algorithm parameters
-#define DEFSIZE 20 //defined window size
-#define SCALE_FACTOR 1.25 //window scaling
-#define Y_STEP_SIZE 1 //window step size along Y step
-#define X_STEP_SIZE 1 //window step size along X step
+/// Input picture file path (when no input image specified)
+#define INPIC "Images/single_sm.rgb"
 
+/// FANN file path
+#define NN "vision_3L_36N.net"
 
+/// Defined window size
+#define DEFSIZE 20
+
+/// Window scaling factor
+#define SCALE_FACTOR 1.25
+
+/// Window step size along Y
+#define Y_STEP_SIZE 1
+
+/// Window step size along X
+#define X_STEP_SIZE 1 /// window step size along X step
+
+/// head of list of faces found
 Face* head = NULL;
+
+/// number of faces in list
 int count = 0;
 
 #if DATA
@@ -66,10 +90,15 @@ int count = 0;
 		fprintf(fp, "%d\n", num);
 		fclose(fp);
 	}
-#endif
+#endif //DATA
 
 
-//Return an integral image from pxls, isSquared determines if it's squared
+/** This computes an integral image from pxls
+  * @param[in][in] pxls pixel values
+  * @param[in][in] isSquared flag to determine 
+  *            if integral image needs to be squared
+  * @return pointer to computed integral RgbImage
+  */
 RgbImage* integralImage(RgbImage* pxls, int isSquared) {
 
 	//Initialize and allocate for RgbImage
@@ -105,22 +134,33 @@ RgbImage* integralImage(RgbImage* pxls, int isSquared) {
 				result->pixels[y][x].g = l + result->pixels[y-1][x].g + result->pixels[y][x-1].g - result->pixels[y-1][x-1].g;
 				result->pixels[y][x].b = l + result->pixels[y-1][x].b + result->pixels[y][x-1].b - result->pixels[y-1][x-1].b;
 			}
-
 		}
 	}
-
 	return result;
-
 }
 
-//Return the mean of integral image area
+/** Compute the mean from integral image starting from x, y with window size
+  * @param[in] integral integral image
+  * @param[in] x x coordinate
+  * @param[in] y y coordinate
+  * @param[in] window window size
+  * @param[in] area total area
+  * @return the mean
+  */
 float getMean(RgbImage* integral, int x, int y, int window, int area) {
-	// Works for floats, but if pixels are ints, should be classifiert to float before division
+	// Works for floats, but if pixels are ints, should be cast to float before division
 	return (integral->pixels[y][x].r - integral->pixels[y + window][x].r- integral->pixels[y][x + window].r
 		+ integral->pixels[y + window][x + window].r) / area;
 }
 
-//Return the feature value computed with the picture
+/** Compute the feature value with integral image. Feature is scaled by scale.
+  * @param[in] integral integral image
+  * @param[in] feat features that got computed
+  * @param[in] scale scale factore
+  * @param[in] x x coordinate
+  * @param[in] y y coordinate
+  * @return the computed feature value
+  */
 float getFeatureVal(RgbImage* integral, Feature feat, float scale, int x, int y) {
 	float totalFeatureVal = 0.0;
 	int i;
@@ -145,9 +185,10 @@ float getFeatureVal(RgbImage* integral, Feature feat, float scale, int x, int y)
 	return totalFeatureVal;
 }
 
-//Merges all the faces, delete them if they overlap by 40%
-//Look into this may find out the memory leak
-int mergeRectangles(int filter) {
+/** Merge faces that overlaps by more than 40%
+  * @return number of difference in list of faces
+  */
+int mergeRectangles() {
 	int diff = 0;
 	Face* rect1;
 	Face* rect2;
@@ -177,8 +218,14 @@ int mergeRectangles(int filter) {
 }
 
 
-//Sliding the fixed classifiercade through the picture to figure out if it's a face.
-//If a face is detected, store it at the end of linked list
+/** Detect faces from pxls with fixed window size
+  * @param[in] pxls input RgbImage
+  * @param[in] integral integral RgbImage
+  * @param[in] integralsq squared integral RgbImage
+  * @param[in] classifier the haar classifier
+  * @param[in] window fixed window size
+  * @param[in] scale fixed scale
+  */
 void detectSingleScale(RgbImage* pxls, RgbImage* integral, RgbImage* integralsq, Cascade* classifier, int window, float scale) {
 	int width = integral->w;
 	int height = integral->h;
@@ -270,8 +317,11 @@ void detectSingleScale(RgbImage* pxls, RgbImage* integral, RgbImage* integralsq,
 	}
 }
 
-//The FANN version of detectSingleScale
-//First shrink the image to 20x20, then run it through fann to get the output
+/** Using FANN approximate detectSingleScale
+  * @param[in] ann setted up FANN
+  * @param[in] pxls input RgbImage
+  * @param[in] window window size scanning the image
+  */
 void approxDetectSingleScale(struct fann *ann, RgbImage* pxls, int window) {
 	int width = pxls->w;
 	int height = pxls->h;
@@ -310,7 +360,12 @@ void approxDetectSingleScale(struct fann *ann, RgbImage* pxls, int window) {
 	}
 }
 
-//Initiating detectSingleScale with different window sizes
+/** Initiating detectSingleScale/approxDetectSingleScale with
+  * increased window size and scaled features scanning through 
+  * the image
+  * @param[in] pxls input RgbImage
+  * @param[in] classifier the haar classifier
+  */
 void detectMultiScale(RgbImage* pxls, Cascade* classifier) {
 	int max_window = min(pxls->w, pxls->h);
 	float window = classifier->dim;
@@ -350,14 +405,6 @@ void detectMultiScale(RgbImage* pxls, Cascade* classifier) {
 		#endif
 
 	#elif VERSION == 1
-		// TODO: support for downscaling - downscale the whole
-			// image and recompute the integral to keep the window
-			// constant
-			// e.g:
-			// 1: shrink down dimensions and image by scaling factor (window stays the same)
-			// 2: recompute itegrals
-			// 3: detection (pass scale 1, window classifier->dim)
-
 		int shrinkWidth = pxls->w;
 		int shrinkHeight = pxls->h;
 		int shrinkSize = max_window;
@@ -375,16 +422,14 @@ void detectMultiScale(RgbImage* pxls, Cascade* classifier) {
 			freeRgbImage(integral);
 			freeRgbImage(integralsq);
 		}
-
-	#endif
+	#endif //VERSION == 1
 
 	printf("Detected = %d!\n", count);
 
 	#if MERGE
-		printf("Merging.\n");
 		int diff = 1;
 		while (diff > 0) {
-			diff = mergeRectangles(max_window);
+			diff = mergeRectangles();
 		}
 	#endif
 
@@ -392,6 +437,10 @@ void detectMultiScale(RgbImage* pxls, Cascade* classifier) {
 	printf("Total faces = %d!\n", count);
 }
 
+/** Detects and prints faces coordinates from filename image
+  * @param[in][in] classifier the haar classifier
+  * @param[in][in] filename the input file
+  */
 void detect(Cascade* classifier, char* filename) {
 	RgbImage srcImage;
 
@@ -400,8 +449,6 @@ void detect(Cascade* classifier, char* filename) {
 	loadRgbImage(filename, &srcImage);
 
 	grayscale(&srcImage);
-
-	printf("Detecting.\n");
 
 	detectMultiScale(&srcImage, classifier);
 

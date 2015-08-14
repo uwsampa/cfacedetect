@@ -2,8 +2,11 @@ import os
 import sys
 import glob
 import subprocess
-from jpg2rgb import jpg2rgb
+from torgb import torgb
 
+## Collect data for FANN trainning from detect.c and writes to output files
+# @arg the image directory path
+# @arg the output file
 if __name__ == '__main__':
 	if len(sys.argv) is not 3:
 		print('Error: Oops! wrong arguments!')
@@ -18,7 +21,7 @@ if __name__ == '__main__':
 	images = glob.glob(directory + "*.jpg")
 
 	for image in images:
-		jpg2rgb(image)
+		torgb(image)
 
 	images = glob.glob(directory + "*.rgb")
 

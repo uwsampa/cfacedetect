@@ -1,0 +1,47 @@
+\hypertarget{compare_8py}{}\section{compare.\+py File Reference}
+\label{compare_8py}\index{compare.\+py@{compare.\+py}}
+\subsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+ \hyperlink{namespacecompare}{compare}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+def \hyperlink{namespacecompare_aa0c59464d2339c77a1d07202f854b8da}{compare.\+cfunc} (image\+Path)
+\begin{DoxyCompactList}\small\item\em Calling the C version face detection. \end{DoxyCompactList}\item 
+def \hyperlink{namespacecompare_ab0b90ece2676a4ed2b6a0b9c0a586cfb}{compare.\+pfunc} (image\+Path, classifier, features, bound)
+\begin{DoxyCompactList}\small\item\em Cally Python version face detection. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+list \hyperlink{namespacecompare_a2e7fcdc543e6a0fde614081764c7b5f8}{compare.\+classifier} = \mbox{[}$\,$\mbox{]}
+\begin{DoxyCompactList}\small\item\em Compare the output from two versions of face detection algorithm(Python vs. \end{DoxyCompactList}\item 
+list \hyperlink{namespacecompare_a54c639c8b89bbd55f7362ec8285739bc}{compare.\+features} = \mbox{[}$\,$\mbox{]}
+\begin{DoxyCompactList}\small\item\em features \end{DoxyCompactList}\item 
+tuple \hyperlink{namespacecompare_a7df7a3d32659e674d401b10b07fbfd4d}{compare.\+directory} = str(sys.\+argv\mbox{[}1\mbox{]})
+\item 
+tuple \hyperlink{namespacecompare_a7506c3070e47d967e5139c47d0924ee1}{compare.\+jpgs} = glob.\+glob(directory + \char`\"{}$\ast$.jpg\char`\"{})
+\item 
+int \hyperlink{namespacecompare_a003350551b423c4ce3833c717bb8157d}{compare.\+pt} = 0
+\begin{DoxyCompactList}\small\item\em python total running time \end{DoxyCompactList}\item 
+int \hyperlink{namespacecompare_a99b344e9432b3e529d933a2b437096a3}{compare.\+ct} = 0
+\begin{DoxyCompactList}\small\item\em c total running time \end{DoxyCompactList}\item 
+float \hyperlink{namespacecompare_afed0a531b3a338fe271715b204fb5d6f}{compare.\+error} = 0.\+0
+\begin{DoxyCompactList}\small\item\em number of differences \end{DoxyCompactList}\item 
+tuple \hyperlink{namespacecompare_aa6ed51fdf2d385739579bec3f610e8e7}{compare.\+count} = len(jpgs)
+\begin{DoxyCompactList}\small\item\em number of images \end{DoxyCompactList}\item 
+tuple \hyperlink{namespacecompare_a9224020c6bf7df9437049feaa2622d71}{compare.\+name} = jpg.\+split(\char`\"{}.\char`\"{})
+\begin{DoxyCompactList}\small\item\em name of the jpg file \end{DoxyCompactList}\item 
+tuple \hyperlink{namespacecompare_accd40faa0aeb12a425478f97f8fda2dd}{compare.\+ps} = time.\+time()
+\begin{DoxyCompactList}\small\item\em time python starts running \end{DoxyCompactList}\item 
+tuple \hyperlink{namespacecompare_aef7f0f6d99cb687ae445a08bd0aaa529}{compare.\+pf} = pfunc(jpg, classifier, features, bound)
+\begin{DoxyCompactList}\small\item\em faces returned from python \end{DoxyCompactList}\item 
+tuple \hyperlink{namespacecompare_a2a03a17585ac65fef036ccc1f66d01e0}{compare.\+pe} = time.\+time()
+\begin{DoxyCompactList}\small\item\em python running time \end{DoxyCompactList}\item 
+tuple \hyperlink{namespacecompare_a4b1cdf610b8347cc4d994fe187708545}{compare.\+cs} = time.\+time()
+\begin{DoxyCompactList}\small\item\em time c starts running \end{DoxyCompactList}\item 
+tuple \hyperlink{namespacecompare_a51fb2e77be48389395beafd6d6756fa9}{compare.\+cf} = cfunc(name + \char`\"{}.rgb\char`\"{})
+\begin{DoxyCompactList}\small\item\em faces returned from c \end{DoxyCompactList}\item 
+tuple \hyperlink{namespacecompare_a7387240bcc549d8e8a3dc6ad7ad9e51e}{compare.\+ce} = time.\+time()
+\begin{DoxyCompactList}\small\item\em c running time \end{DoxyCompactList}\end{DoxyCompactItemize}

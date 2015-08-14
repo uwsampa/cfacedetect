@@ -1,0 +1,90 @@
+\hypertarget{face_8c}{}\section{face.\+c File Reference}
+\label{face_8c}\index{face.\+c@{face.\+c}}
+{\ttfamily \#include $<$stdlib.\+h$>$}\\*
+{\ttfamily \#include $<$stdio.\+h$>$}\\*
+{\ttfamily \#include $<$stdbool.\+h$>$}\\*
+{\ttfamily \#include \char`\"{}face.\+h\char`\"{}}\\*
+{\ttfamily \#include $<$assert.\+h$>$}\\*
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{structFace}{Face} $\ast$ \hyperlink{face_8c_a53a5e96bc7b4226ef1d576211fd67b65}{push} (\hyperlink{structFace}{Face} $\ast$\hyperlink{detect_8c_a17fdeb7adf100e52522161e5fd109f3a}{head}, int window, int x, int y)
+\item 
+bool \hyperlink{face_8c_abf347ff8df6efb57e29dc5281cbed157}{overlap} (\hyperlink{structFace}{Face} $\ast$rect1, \hyperlink{structFace}{Face} $\ast$rect2)
+\item 
+\hyperlink{structFace}{Face} $\ast$ \hyperlink{face_8c_a1bb04392bc8356217f09f516cc3555e5}{delete\+Next} (\hyperlink{structFace}{Face} $\ast$node)
+\item 
+void \hyperlink{face_8c_a837ad4077cf612d0de767adec6ca3126}{printfree} (\hyperlink{structFace}{Face} $\ast$\hyperlink{detect_8c_a17fdeb7adf100e52522161e5fd109f3a}{head})
+\end{DoxyCompactItemize}
+
+
+\subsection{Function Documentation}
+\hypertarget{face_8c_a1bb04392bc8356217f09f516cc3555e5}{}\index{face.\+c@{face.\+c}!delete\+Next@{delete\+Next}}
+\index{delete\+Next@{delete\+Next}!face.\+c@{face.\+c}}
+\subsubsection[{delete\+Next(\+Face $\ast$node)}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Face}$\ast$ delete\+Next (
+\begin{DoxyParamCaption}
+\item[{{\bf Face} $\ast$}]{node}
+\end{DoxyParamCaption}
+)}\label{face_8c_a1bb04392bc8356217f09f516cc3555e5}
+Delete the face right after node(\+Note it cannot delete head) 
+\begin{DoxyParams}{Parameters}
+{\em node} & previous node before the deleted one \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the node right after the deleted one 
+\end{DoxyReturn}
+\hypertarget{face_8c_abf347ff8df6efb57e29dc5281cbed157}{}\index{face.\+c@{face.\+c}!overlap@{overlap}}
+\index{overlap@{overlap}!face.\+c@{face.\+c}}
+\subsubsection[{overlap(\+Face $\ast$rect1, Face $\ast$rect2)}]{\setlength{\rightskip}{0pt plus 5cm}bool overlap (
+\begin{DoxyParamCaption}
+\item[{{\bf Face} $\ast$}]{rect1, }
+\item[{{\bf Face} $\ast$}]{rect2}
+\end{DoxyParamCaption}
+)}\label{face_8c_abf347ff8df6efb57e29dc5281cbed157}
+Check if rect1 and rect2 overlap by more than 40\% 
+\begin{DoxyParams}{Parameters}
+{\em rect1} & face 1 \\
+\hline
+{\em rect2} & face 2 \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true if overlaps, false otherwise 
+\end{DoxyReturn}
+\hypertarget{face_8c_a837ad4077cf612d0de767adec6ca3126}{}\index{face.\+c@{face.\+c}!printfree@{printfree}}
+\index{printfree@{printfree}!face.\+c@{face.\+c}}
+\subsubsection[{printfree(\+Face $\ast$head)}]{\setlength{\rightskip}{0pt plus 5cm}void printfree (
+\begin{DoxyParamCaption}
+\item[{{\bf Face} $\ast$}]{head}
+\end{DoxyParamCaption}
+)}\label{face_8c_a837ad4077cf612d0de767adec6ca3126}
+Prints all the faces from the linked list starting from head and free them accordingly 
+\begin{DoxyParams}{Parameters}
+{\em head} & the head of list \\
+\hline
+\end{DoxyParams}
+\hypertarget{face_8c_a53a5e96bc7b4226ef1d576211fd67b65}{}\index{face.\+c@{face.\+c}!push@{push}}
+\index{push@{push}!face.\+c@{face.\+c}}
+\subsubsection[{push(\+Face $\ast$head, int window, int x, int y)}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Face}$\ast$ push (
+\begin{DoxyParamCaption}
+\item[{{\bf Face} $\ast$}]{head, }
+\item[{int}]{window, }
+\item[{int}]{x, }
+\item[{int}]{y}
+\end{DoxyParamCaption}
+)}\label{face_8c_a53a5e96bc7b4226ef1d576211fd67b65}
+Append face(window, x, y) to the end of linked list starting from head 
+\begin{DoxyParams}{Parameters}
+{\em head} & head of the list \\
+\hline
+{\em window} & window size \\
+\hline
+{\em x} & x coordinate \\
+\hline
+{\em y} & y coordinate \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the newly updated head 
+\end{DoxyReturn}

@@ -1,0 +1,340 @@
+\hypertarget{detect_8c}{}\section{detect.\+c File Reference}
+\label{detect_8c}\index{detect.\+c@{detect.\+c}}
+{\ttfamily \#include $<$dirent.\+h$>$}\\*
+{\ttfamily \#include $<$math.\+h$>$}\\*
+{\ttfamily \#include $<$stdio.\+h$>$}\\*
+{\ttfamily \#include $<$stdlib.\+h$>$}\\*
+{\ttfamily \#include $<$stdbool.\+h$>$}\\*
+{\ttfamily \#include $<$string.\+h$>$}\\*
+{\ttfamily \#include $<$time.\+h$>$}\\*
+{\ttfamily \#include \char`\"{}face.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}floatfann.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}parse.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}rgb\+\_\+image.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}shrink.\+h\char`\"{}}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{detect_8c_a1c6d5de492ac61ad29aec7aa9a436bbf}{V\+E\+R\+S\+I\+O\+N}~0
+\item 
+\#define \hyperlink{detect_8c_af22c0de22b838c10ed5525e0b9d717c6}{A\+D\+A\+P\+T\+I\+V\+E\+\_\+\+S\+T\+E\+P}~false
+\item 
+\#define \hyperlink{detect_8c_a7965db523cd31a87cb2f1fa71e761897}{A\+P\+P\+R\+O\+X}~false
+\begin{DoxyCompactList}\small\item\em Turns on F\+A\+N\+N evaluation. \end{DoxyCompactList}\item 
+\#define \hyperlink{detect_8c_a76920359bed3adc755c7f50ecd2728c9}{M\+E\+R\+G\+E}~true
+\begin{DoxyCompactList}\small\item\em Turns on merging when collecting results. \end{DoxyCompactList}\item 
+\#define \hyperlink{detect_8c_ab8c52c1b4c021ed3e6b6b677bd2ac019}{M\+O\+D\+E}~2
+\item 
+\#define \hyperlink{detect_8c_ad72dbcf6d0153db1b8d8a58001feed83}{D\+E\+B\+U\+G}~false
+\begin{DoxyCompactList}\small\item\em Turns on debugging information. \end{DoxyCompactList}\item 
+\#define \hyperlink{detect_8c_aad9ae913bdfab20dd94ad04ee2d5b045}{D\+A\+T\+A}~false
+\begin{DoxyCompactList}\small\item\em Turns on data collection. \end{DoxyCompactList}\item 
+\#define \hyperlink{detect_8c_a0671e650795436e888b69055f7e146c4}{C\+A\+S\+C\+A\+D\+E}~\char`\"{}xml/ocv\+\_\+clsfr.\+xml\char`\"{}
+\begin{DoxyCompactList}\small\item\em H\+A\+A\+R cascade file path. \end{DoxyCompactList}\item 
+\#define \hyperlink{detect_8c_a0ae2f7bc6c9bd14f89aeaba36a69855c}{I\+N\+P\+I\+C}~\char`\"{}Images/single\+\_\+sm.\+rgb\char`\"{}
+\begin{DoxyCompactList}\small\item\em Input picture file path (when no input image specified) \end{DoxyCompactList}\item 
+\#define \hyperlink{detect_8c_a170755e30c36be4904106b7bb279b1ec}{N\+N}~\char`\"{}vision\+\_\+3\+L\+\_\+36\+N.\+net\char`\"{}
+\begin{DoxyCompactList}\small\item\em F\+A\+N\+N file path. \end{DoxyCompactList}\item 
+\#define \hyperlink{detect_8c_a39f527f617e0b16508c8cfb7073facfa}{D\+E\+F\+S\+I\+Z\+E}~20
+\begin{DoxyCompactList}\small\item\em Defined window size. \end{DoxyCompactList}\item 
+\#define \hyperlink{detect_8c_adb1f1d5b685f5a444190abe4ac18d972}{S\+C\+A\+L\+E\+\_\+\+F\+A\+C\+T\+O\+R}~1.\+25
+\begin{DoxyCompactList}\small\item\em Window scaling factor. \end{DoxyCompactList}\item 
+\#define \hyperlink{detect_8c_ae7110ae29f5c340cd866f1a0647a0b80}{Y\+\_\+\+S\+T\+E\+P\+\_\+\+S\+I\+Z\+E}~1
+\begin{DoxyCompactList}\small\item\em Window step size along Y. \end{DoxyCompactList}\item 
+\#define \hyperlink{detect_8c_ae2404e944e181a58b255a3fc513d71ae}{X\+\_\+\+S\+T\+E\+P\+\_\+\+S\+I\+Z\+E}~1
+\begin{DoxyCompactList}\small\item\em Window step size along X. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{structRgbImage}{Rgb\+Image} $\ast$ \hyperlink{detect_8c_a7ba233570f3303d6ec6d88b289226c68}{integral\+Image} (\hyperlink{structRgbImage}{Rgb\+Image} $\ast$pxls, int is\+Squared)
+\item 
+float \hyperlink{detect_8c_aee6a8e19b607aa46e253f763a3b47d49}{get\+Mean} (\hyperlink{structRgbImage}{Rgb\+Image} $\ast$integral, int x, int y, int window, int area)
+\item 
+float \hyperlink{detect_8c_aa0a44dcbfbe11005d92c88749dffedef}{get\+Feature\+Val} (\hyperlink{structRgbImage}{Rgb\+Image} $\ast$integral, \hyperlink{structFeature}{Feature} feat, float scale, int x, int y)
+\item 
+int \hyperlink{detect_8c_ae82d65b294f1c3ab7f79b881f10ee3c5}{merge\+Rectangles} ()
+\item 
+void \hyperlink{detect_8c_acf91223edec2426db0b25e68b439a4d8}{detect\+Single\+Scale} (\hyperlink{structRgbImage}{Rgb\+Image} $\ast$pxls, \hyperlink{structRgbImage}{Rgb\+Image} $\ast$integral, \hyperlink{structRgbImage}{Rgb\+Image} $\ast$integralsq, \hyperlink{structCascade}{Cascade} $\ast$classifier, int window, float scale)
+\item 
+void \hyperlink{detect_8c_a664bc1339547a48bb0eda1bc77212ca0}{approx\+Detect\+Single\+Scale} (struct fann $\ast$ann, \hyperlink{structRgbImage}{Rgb\+Image} $\ast$pxls, int window)
+\item 
+void \hyperlink{detect_8c_a301e2294e6ca3186d3d43b3e8586132f}{detect\+Multi\+Scale} (\hyperlink{structRgbImage}{Rgb\+Image} $\ast$pxls, \hyperlink{structCascade}{Cascade} $\ast$classifier)
+\item 
+void \hyperlink{detect_8c_acee54036d099c4fe11eaef727bdd7e5f}{detect} (\hyperlink{structCascade}{Cascade} $\ast$classifier, char $\ast$filename)
+\item 
+int \hyperlink{detect_8c_a3c04138a5bfe5d72780bb7e82a18e627}{main} (int argc, char $\ast$$\ast$argv)
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{structFace}{Face} $\ast$ \hyperlink{detect_8c_a17fdeb7adf100e52522161e5fd109f3a}{head} = N\+U\+L\+L
+\begin{DoxyCompactList}\small\item\em head of list of faces found \end{DoxyCompactList}\item 
+int \hyperlink{detect_8c_ad43c3812e6d13e0518d9f8b8f463ffcf}{count} = 0
+\begin{DoxyCompactList}\small\item\em number of faces in list \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{detect_8c_af22c0de22b838c10ed5525e0b9d717c6}{}\index{detect.\+c@{detect.\+c}!A\+D\+A\+P\+T\+I\+V\+E\+\_\+\+S\+T\+E\+P@{A\+D\+A\+P\+T\+I\+V\+E\+\_\+\+S\+T\+E\+P}}
+\index{A\+D\+A\+P\+T\+I\+V\+E\+\_\+\+S\+T\+E\+P@{A\+D\+A\+P\+T\+I\+V\+E\+\_\+\+S\+T\+E\+P}!detect.\+c@{detect.\+c}}
+\subsubsection[{A\+D\+A\+P\+T\+I\+V\+E\+\_\+\+S\+T\+E\+P}]{\setlength{\rightskip}{0pt plus 5cm}\#define A\+D\+A\+P\+T\+I\+V\+E\+\_\+\+S\+T\+E\+P~false}\label{detect_8c_af22c0de22b838c10ed5525e0b9d717c6}
+Turns on adaptive step for the algorithm false\+: Adaptive step disabled (ver. 0 only) true\+: Adaptive step enabled (ver. 0 only) \hypertarget{detect_8c_a7965db523cd31a87cb2f1fa71e761897}{}\index{detect.\+c@{detect.\+c}!A\+P\+P\+R\+O\+X@{A\+P\+P\+R\+O\+X}}
+\index{A\+P\+P\+R\+O\+X@{A\+P\+P\+R\+O\+X}!detect.\+c@{detect.\+c}}
+\subsubsection[{A\+P\+P\+R\+O\+X}]{\setlength{\rightskip}{0pt plus 5cm}\#define A\+P\+P\+R\+O\+X~false}\label{detect_8c_a7965db523cd31a87cb2f1fa71e761897}
+
+
+Turns on F\+A\+N\+N evaluation. 
+
+\hypertarget{detect_8c_a0671e650795436e888b69055f7e146c4}{}\index{detect.\+c@{detect.\+c}!C\+A\+S\+C\+A\+D\+E@{C\+A\+S\+C\+A\+D\+E}}
+\index{C\+A\+S\+C\+A\+D\+E@{C\+A\+S\+C\+A\+D\+E}!detect.\+c@{detect.\+c}}
+\subsubsection[{C\+A\+S\+C\+A\+D\+E}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+A\+S\+C\+A\+D\+E~\char`\"{}xml/ocv\+\_\+clsfr.\+xml\char`\"{}}\label{detect_8c_a0671e650795436e888b69055f7e146c4}
+
+
+H\+A\+A\+R cascade file path. 
+
+\hypertarget{detect_8c_aad9ae913bdfab20dd94ad04ee2d5b045}{}\index{detect.\+c@{detect.\+c}!D\+A\+T\+A@{D\+A\+T\+A}}
+\index{D\+A\+T\+A@{D\+A\+T\+A}!detect.\+c@{detect.\+c}}
+\subsubsection[{D\+A\+T\+A}]{\setlength{\rightskip}{0pt plus 5cm}\#define D\+A\+T\+A~false}\label{detect_8c_aad9ae913bdfab20dd94ad04ee2d5b045}
+
+
+Turns on data collection. 
+
+\hypertarget{detect_8c_ad72dbcf6d0153db1b8d8a58001feed83}{}\index{detect.\+c@{detect.\+c}!D\+E\+B\+U\+G@{D\+E\+B\+U\+G}}
+\index{D\+E\+B\+U\+G@{D\+E\+B\+U\+G}!detect.\+c@{detect.\+c}}
+\subsubsection[{D\+E\+B\+U\+G}]{\setlength{\rightskip}{0pt plus 5cm}\#define D\+E\+B\+U\+G~false}\label{detect_8c_ad72dbcf6d0153db1b8d8a58001feed83}
+
+
+Turns on debugging information. 
+
+\hypertarget{detect_8c_a39f527f617e0b16508c8cfb7073facfa}{}\index{detect.\+c@{detect.\+c}!D\+E\+F\+S\+I\+Z\+E@{D\+E\+F\+S\+I\+Z\+E}}
+\index{D\+E\+F\+S\+I\+Z\+E@{D\+E\+F\+S\+I\+Z\+E}!detect.\+c@{detect.\+c}}
+\subsubsection[{D\+E\+F\+S\+I\+Z\+E}]{\setlength{\rightskip}{0pt plus 5cm}\#define D\+E\+F\+S\+I\+Z\+E~20}\label{detect_8c_a39f527f617e0b16508c8cfb7073facfa}
+
+
+Defined window size. 
+
+\hypertarget{detect_8c_a0ae2f7bc6c9bd14f89aeaba36a69855c}{}\index{detect.\+c@{detect.\+c}!I\+N\+P\+I\+C@{I\+N\+P\+I\+C}}
+\index{I\+N\+P\+I\+C@{I\+N\+P\+I\+C}!detect.\+c@{detect.\+c}}
+\subsubsection[{I\+N\+P\+I\+C}]{\setlength{\rightskip}{0pt plus 5cm}\#define I\+N\+P\+I\+C~\char`\"{}Images/single\+\_\+sm.\+rgb\char`\"{}}\label{detect_8c_a0ae2f7bc6c9bd14f89aeaba36a69855c}
+
+
+Input picture file path (when no input image specified) 
+
+\hypertarget{detect_8c_a76920359bed3adc755c7f50ecd2728c9}{}\index{detect.\+c@{detect.\+c}!M\+E\+R\+G\+E@{M\+E\+R\+G\+E}}
+\index{M\+E\+R\+G\+E@{M\+E\+R\+G\+E}!detect.\+c@{detect.\+c}}
+\subsubsection[{M\+E\+R\+G\+E}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\+E\+R\+G\+E~true}\label{detect_8c_a76920359bed3adc755c7f50ecd2728c9}
+
+
+Turns on merging when collecting results. 
+
+\hypertarget{detect_8c_ab8c52c1b4c021ed3e6b6b677bd2ac019}{}\index{detect.\+c@{detect.\+c}!M\+O\+D\+E@{M\+O\+D\+E}}
+\index{M\+O\+D\+E@{M\+O\+D\+E}!detect.\+c@{detect.\+c}}
+\subsubsection[{M\+O\+D\+E}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\+O\+D\+E~2}\label{detect_8c_ab8c52c1b4c021ed3e6b6b677bd2ac019}
+Scales image in 4 modes 1\+: downscaling 2\+: downsampling 3\+: maxpooling 4\+: minpooling \hypertarget{detect_8c_a170755e30c36be4904106b7bb279b1ec}{}\index{detect.\+c@{detect.\+c}!N\+N@{N\+N}}
+\index{N\+N@{N\+N}!detect.\+c@{detect.\+c}}
+\subsubsection[{N\+N}]{\setlength{\rightskip}{0pt plus 5cm}\#define N\+N~\char`\"{}vision\+\_\+3\+L\+\_\+36\+N.\+net\char`\"{}}\label{detect_8c_a170755e30c36be4904106b7bb279b1ec}
+
+
+F\+A\+N\+N file path. 
+
+\hypertarget{detect_8c_adb1f1d5b685f5a444190abe4ac18d972}{}\index{detect.\+c@{detect.\+c}!S\+C\+A\+L\+E\+\_\+\+F\+A\+C\+T\+O\+R@{S\+C\+A\+L\+E\+\_\+\+F\+A\+C\+T\+O\+R}}
+\index{S\+C\+A\+L\+E\+\_\+\+F\+A\+C\+T\+O\+R@{S\+C\+A\+L\+E\+\_\+\+F\+A\+C\+T\+O\+R}!detect.\+c@{detect.\+c}}
+\subsubsection[{S\+C\+A\+L\+E\+\_\+\+F\+A\+C\+T\+O\+R}]{\setlength{\rightskip}{0pt plus 5cm}\#define S\+C\+A\+L\+E\+\_\+\+F\+A\+C\+T\+O\+R~1.\+25}\label{detect_8c_adb1f1d5b685f5a444190abe4ac18d972}
+
+
+Window scaling factor. 
+
+\hypertarget{detect_8c_a1c6d5de492ac61ad29aec7aa9a436bbf}{}\index{detect.\+c@{detect.\+c}!V\+E\+R\+S\+I\+O\+N@{V\+E\+R\+S\+I\+O\+N}}
+\index{V\+E\+R\+S\+I\+O\+N@{V\+E\+R\+S\+I\+O\+N}!detect.\+c@{detect.\+c}}
+\subsubsection[{V\+E\+R\+S\+I\+O\+N}]{\setlength{\rightskip}{0pt plus 5cm}\#define V\+E\+R\+S\+I\+O\+N~0}\label{detect_8c_a1c6d5de492ac61ad29aec7aa9a436bbf}
+Version selection 0\+: original viola jones algorithm 1\+: new thierry\textquotesingle{}s way of implementation \hypertarget{detect_8c_ae2404e944e181a58b255a3fc513d71ae}{}\index{detect.\+c@{detect.\+c}!X\+\_\+\+S\+T\+E\+P\+\_\+\+S\+I\+Z\+E@{X\+\_\+\+S\+T\+E\+P\+\_\+\+S\+I\+Z\+E}}
+\index{X\+\_\+\+S\+T\+E\+P\+\_\+\+S\+I\+Z\+E@{X\+\_\+\+S\+T\+E\+P\+\_\+\+S\+I\+Z\+E}!detect.\+c@{detect.\+c}}
+\subsubsection[{X\+\_\+\+S\+T\+E\+P\+\_\+\+S\+I\+Z\+E}]{\setlength{\rightskip}{0pt plus 5cm}\#define X\+\_\+\+S\+T\+E\+P\+\_\+\+S\+I\+Z\+E~1}\label{detect_8c_ae2404e944e181a58b255a3fc513d71ae}
+
+
+Window step size along X. 
+
+\hypertarget{detect_8c_ae7110ae29f5c340cd866f1a0647a0b80}{}\index{detect.\+c@{detect.\+c}!Y\+\_\+\+S\+T\+E\+P\+\_\+\+S\+I\+Z\+E@{Y\+\_\+\+S\+T\+E\+P\+\_\+\+S\+I\+Z\+E}}
+\index{Y\+\_\+\+S\+T\+E\+P\+\_\+\+S\+I\+Z\+E@{Y\+\_\+\+S\+T\+E\+P\+\_\+\+S\+I\+Z\+E}!detect.\+c@{detect.\+c}}
+\subsubsection[{Y\+\_\+\+S\+T\+E\+P\+\_\+\+S\+I\+Z\+E}]{\setlength{\rightskip}{0pt plus 5cm}\#define Y\+\_\+\+S\+T\+E\+P\+\_\+\+S\+I\+Z\+E~1}\label{detect_8c_ae7110ae29f5c340cd866f1a0647a0b80}
+
+
+Window step size along Y. 
+
+
+
+\subsection{Function Documentation}
+\hypertarget{detect_8c_a664bc1339547a48bb0eda1bc77212ca0}{}\index{detect.\+c@{detect.\+c}!approx\+Detect\+Single\+Scale@{approx\+Detect\+Single\+Scale}}
+\index{approx\+Detect\+Single\+Scale@{approx\+Detect\+Single\+Scale}!detect.\+c@{detect.\+c}}
+\subsubsection[{approx\+Detect\+Single\+Scale(struct fann $\ast$ann, Rgb\+Image $\ast$pxls, int window)}]{\setlength{\rightskip}{0pt plus 5cm}void approx\+Detect\+Single\+Scale (
+\begin{DoxyParamCaption}
+\item[{struct fann $\ast$}]{ann, }
+\item[{{\bf Rgb\+Image} $\ast$}]{pxls, }
+\item[{int}]{window}
+\end{DoxyParamCaption}
+)}\label{detect_8c_a664bc1339547a48bb0eda1bc77212ca0}
+Using F\+A\+N\+N approximate detect\+Single\+Scale 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em ann} & setted up F\+A\+N\+N \\
+\hline
+\mbox{\tt in}  & {\em pxls} & input \hyperlink{structRgbImage}{Rgb\+Image} \\
+\hline
+\mbox{\tt in}  & {\em window} & window size scanning the image \\
+\hline
+\end{DoxyParams}
+\hypertarget{detect_8c_acee54036d099c4fe11eaef727bdd7e5f}{}\index{detect.\+c@{detect.\+c}!detect@{detect}}
+\index{detect@{detect}!detect.\+c@{detect.\+c}}
+\subsubsection[{detect(\+Cascade $\ast$classifier, char $\ast$filename)}]{\setlength{\rightskip}{0pt plus 5cm}void detect (
+\begin{DoxyParamCaption}
+\item[{{\bf Cascade} $\ast$}]{classifier, }
+\item[{char $\ast$}]{filename}
+\end{DoxyParamCaption}
+)}\label{detect_8c_acee54036d099c4fe11eaef727bdd7e5f}
+Detects and prints faces coordinates from filename image 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em } & \\
+\hline
+\end{DoxyParams}
+\hypertarget{detect_8c_a301e2294e6ca3186d3d43b3e8586132f}{}\index{detect.\+c@{detect.\+c}!detect\+Multi\+Scale@{detect\+Multi\+Scale}}
+\index{detect\+Multi\+Scale@{detect\+Multi\+Scale}!detect.\+c@{detect.\+c}}
+\subsubsection[{detect\+Multi\+Scale(\+Rgb\+Image $\ast$pxls, Cascade $\ast$classifier)}]{\setlength{\rightskip}{0pt plus 5cm}void detect\+Multi\+Scale (
+\begin{DoxyParamCaption}
+\item[{{\bf Rgb\+Image} $\ast$}]{pxls, }
+\item[{{\bf Cascade} $\ast$}]{classifier}
+\end{DoxyParamCaption}
+)}\label{detect_8c_a301e2294e6ca3186d3d43b3e8586132f}
+Initiating detect\+Single\+Scale/approx\+Detect\+Single\+Scale with increased window size and scaled features scanning through the image 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em pxls} & input \hyperlink{structRgbImage}{Rgb\+Image} \\
+\hline
+\mbox{\tt in}  & {\em classifier} & the haar classifier \\
+\hline
+\end{DoxyParams}
+\hypertarget{detect_8c_acf91223edec2426db0b25e68b439a4d8}{}\index{detect.\+c@{detect.\+c}!detect\+Single\+Scale@{detect\+Single\+Scale}}
+\index{detect\+Single\+Scale@{detect\+Single\+Scale}!detect.\+c@{detect.\+c}}
+\subsubsection[{detect\+Single\+Scale(\+Rgb\+Image $\ast$pxls, Rgb\+Image $\ast$integral, Rgb\+Image $\ast$integralsq, Cascade $\ast$classifier, int window, float scale)}]{\setlength{\rightskip}{0pt plus 5cm}void detect\+Single\+Scale (
+\begin{DoxyParamCaption}
+\item[{{\bf Rgb\+Image} $\ast$}]{pxls, }
+\item[{{\bf Rgb\+Image} $\ast$}]{integral, }
+\item[{{\bf Rgb\+Image} $\ast$}]{integralsq, }
+\item[{{\bf Cascade} $\ast$}]{classifier, }
+\item[{int}]{window, }
+\item[{float}]{scale}
+\end{DoxyParamCaption}
+)}\label{detect_8c_acf91223edec2426db0b25e68b439a4d8}
+Detect faces from pxls with fixed window size 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em pxls} & input \hyperlink{structRgbImage}{Rgb\+Image} \\
+\hline
+\mbox{\tt in}  & {\em integral} & integral \hyperlink{structRgbImage}{Rgb\+Image} \\
+\hline
+\mbox{\tt in}  & {\em integralsq} & squared integral \hyperlink{structRgbImage}{Rgb\+Image} \\
+\hline
+\mbox{\tt in}  & {\em classifier} & the haar classifier \\
+\hline
+\mbox{\tt in}  & {\em window} & fixed window size \\
+\hline
+\mbox{\tt in}  & {\em scale} & fixed scale \\
+\hline
+\end{DoxyParams}
+\hypertarget{detect_8c_aa0a44dcbfbe11005d92c88749dffedef}{}\index{detect.\+c@{detect.\+c}!get\+Feature\+Val@{get\+Feature\+Val}}
+\index{get\+Feature\+Val@{get\+Feature\+Val}!detect.\+c@{detect.\+c}}
+\subsubsection[{get\+Feature\+Val(\+Rgb\+Image $\ast$integral, Feature feat, float scale, int x, int y)}]{\setlength{\rightskip}{0pt plus 5cm}float get\+Feature\+Val (
+\begin{DoxyParamCaption}
+\item[{{\bf Rgb\+Image} $\ast$}]{integral, }
+\item[{{\bf Feature}}]{feat, }
+\item[{float}]{scale, }
+\item[{int}]{x, }
+\item[{int}]{y}
+\end{DoxyParamCaption}
+)}\label{detect_8c_aa0a44dcbfbe11005d92c88749dffedef}
+Compute the feature value with integral image. \hyperlink{structFeature}{Feature} is scaled by scale. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em integral} & integral image \\
+\hline
+\mbox{\tt in}  & {\em feat} & features that got computed \\
+\hline
+\mbox{\tt in}  & {\em scale} & scale factore \\
+\hline
+\mbox{\tt in}  & {\em x} & x coordinate \\
+\hline
+\mbox{\tt in}  & {\em y} & y coordinate \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the computed feature value 
+\end{DoxyReturn}
+\hypertarget{detect_8c_aee6a8e19b607aa46e253f763a3b47d49}{}\index{detect.\+c@{detect.\+c}!get\+Mean@{get\+Mean}}
+\index{get\+Mean@{get\+Mean}!detect.\+c@{detect.\+c}}
+\subsubsection[{get\+Mean(\+Rgb\+Image $\ast$integral, int x, int y, int window, int area)}]{\setlength{\rightskip}{0pt plus 5cm}float get\+Mean (
+\begin{DoxyParamCaption}
+\item[{{\bf Rgb\+Image} $\ast$}]{integral, }
+\item[{int}]{x, }
+\item[{int}]{y, }
+\item[{int}]{window, }
+\item[{int}]{area}
+\end{DoxyParamCaption}
+)}\label{detect_8c_aee6a8e19b607aa46e253f763a3b47d49}
+Compute the mean from integral image starting from x, y with window size 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em integral} & integral image \\
+\hline
+\mbox{\tt in}  & {\em x} & x coordinate \\
+\hline
+\mbox{\tt in}  & {\em y} & y coordinate \\
+\hline
+\mbox{\tt in}  & {\em window} & window size \\
+\hline
+\mbox{\tt in}  & {\em area} & total area \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the mean 
+\end{DoxyReturn}
+\hypertarget{detect_8c_a7ba233570f3303d6ec6d88b289226c68}{}\index{detect.\+c@{detect.\+c}!integral\+Image@{integral\+Image}}
+\index{integral\+Image@{integral\+Image}!detect.\+c@{detect.\+c}}
+\subsubsection[{integral\+Image(\+Rgb\+Image $\ast$pxls, int is\+Squared)}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Rgb\+Image}$\ast$ integral\+Image (
+\begin{DoxyParamCaption}
+\item[{{\bf Rgb\+Image} $\ast$}]{pxls, }
+\item[{int}]{is\+Squared}
+\end{DoxyParamCaption}
+)}\label{detect_8c_a7ba233570f3303d6ec6d88b289226c68}
+This computes an integral image from pxls 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em } & \\
+\hline
+\end{DoxyParams}
+\hypertarget{detect_8c_a3c04138a5bfe5d72780bb7e82a18e627}{}\index{detect.\+c@{detect.\+c}!main@{main}}
+\index{main@{main}!detect.\+c@{detect.\+c}}
+\subsubsection[{main(int argc, char $\ast$$\ast$argv)}]{\setlength{\rightskip}{0pt plus 5cm}int main (
+\begin{DoxyParamCaption}
+\item[{int}]{argc, }
+\item[{char $\ast$$\ast$}]{argv}
+\end{DoxyParamCaption}
+)}\label{detect_8c_a3c04138a5bfe5d72780bb7e82a18e627}
+\hypertarget{detect_8c_ae82d65b294f1c3ab7f79b881f10ee3c5}{}\index{detect.\+c@{detect.\+c}!merge\+Rectangles@{merge\+Rectangles}}
+\index{merge\+Rectangles@{merge\+Rectangles}!detect.\+c@{detect.\+c}}
+\subsubsection[{merge\+Rectangles()}]{\setlength{\rightskip}{0pt plus 5cm}int merge\+Rectangles (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{detect_8c_ae82d65b294f1c3ab7f79b881f10ee3c5}
+Merge faces that overlaps by more than 40\% \begin{DoxyReturn}{Returns}
+number of difference in list of faces 
+\end{DoxyReturn}
+
+
+\subsection{Variable Documentation}
+\hypertarget{detect_8c_ad43c3812e6d13e0518d9f8b8f463ffcf}{}\index{detect.\+c@{detect.\+c}!count@{count}}
+\index{count@{count}!detect.\+c@{detect.\+c}}
+\subsubsection[{count}]{\setlength{\rightskip}{0pt plus 5cm}int count = 0}\label{detect_8c_ad43c3812e6d13e0518d9f8b8f463ffcf}
+
+
+number of faces in list 
+
+\hypertarget{detect_8c_a17fdeb7adf100e52522161e5fd109f3a}{}\index{detect.\+c@{detect.\+c}!head@{head}}
+\index{head@{head}!detect.\+c@{detect.\+c}}
+\subsubsection[{head}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Face}$\ast$ head = N\+U\+L\+L}\label{detect_8c_a17fdeb7adf100e52522161e5fd109f3a}
+
+
+head of list of faces found 
+

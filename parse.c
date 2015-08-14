@@ -6,9 +6,14 @@
 #include <libxml2/libxml/parser.h>
 #include <libxml2/libxml/xpath.h>
 
+/// evaluates the content in node
 #define VALUE(X) (char *)X->nodesetval->nodeTab[0]->xmlChildrenNode->content
 
-//Returns an xmlptr which returns the given nodeset
+/** Retrieve the wanted nodeset from doc
+  * @param[in] doc xml document
+  * @param[in] xpath path to the nodeset
+  * @return an xmlptr points to the wanted nodeset
+  */
 xmlXPathObjectPtr getnodeset (xmlDocPtr doc, xmlChar *xpath) {
 	
 	xmlXPathContextPtr context;
@@ -33,7 +38,9 @@ xmlXPathObjectPtr getnodeset (xmlDocPtr doc, xmlChar *xpath) {
 	return result;
 }
 
-//freeing the cascade
+/** Freeing the cascade from memory
+  * @param[in] cas pointer to cascade
+  */
 void freeCascade(Cascade* cas) {
 	int i;
 	for(i = 0; i < cas->stgNum; i++) {
@@ -45,10 +52,12 @@ void freeCascade(Cascade* cas) {
 	free(cas->stages);
 	free(cas->features);
 	free(cas);
-	printf("Cascade freed.\n");
 }
 
-//Loading from xml and returning the cascade ptr
+/** Load the cascade from path
+  * @param[in] path file path to xml file
+  * @return pointer to the loaded cascade
+  */
 Cascade* loadCascade(char* path) {
 	xmlDocPtr doc;
 	xmlXPathObjectPtr result;
@@ -153,6 +162,5 @@ Cascade* loadCascade(char* path) {
 
 	xmlFreeDoc(doc);
 	xmlCleanupParser();
-	printf("Cascade built.\n");
 	return cas;
 }

@@ -1,0 +1,20 @@
+
+\begin{DoxyEnumerate}
+\item Clone the repository to your Unix system
+\begin{DoxyItemize}
+\item {\ttfamily git clone git@github.\+com\+:uwsampa/cfacedetect.\+git}
+\end{DoxyItemize}
+\item Type {\ttfamily make} to compile it. Make sure libxml2 and fann is installed.
+\item Run {\ttfamily ./detect $<$rgb filename$>$} for face detection.
+\item Run {\ttfamily python \hyperlink{data_8py}{data.\+py} $<$directory$>$ $<$output$>$} for data collection.
+\begin{DoxyItemize}
+\item make sure turns on D\+A\+T\+A flag in \hyperlink{detect_8c}{detect.\+c}.
+\end{DoxyItemize}
+\end{DoxyEnumerate}
+
+Note\+: detect only works for rgb picture files
+
+Use \hyperlink{torgb_8py}{torgb.\+py} for image conversion.
+\begin{DoxyItemize}
+\item {\ttfamily \$ python \hyperlink{torgb_8py}{torgb.\+py} $<$input$>$} 
+\end{DoxyItemize}

@@ -1,11 +1,13 @@
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include "rgb_image.h"
 
-//This allocates memory for a RgbImage.
-//Return the allocated pointer
+/** Allocates memory for a RgbImage.
+  * @param[in] width the width of RgbImage
+  * @param[in] height the height of RgbImage
+  * @return the allocated pointer
+  */
 RgbImage* allocate(int width, int height) {
 	int i, c = 0;
 
@@ -39,13 +41,17 @@ RgbImage* allocate(int width, int height) {
 	return result;
 }
 
-//This shrinks a image of size starting from x, y to scale size image, downsp tells
-// if use downscaling or downsampling. Return the shrinked image.
-// mode
-// 1: downscaling
-// 2: downsampling
-// 3: maxpooling
-// 4: minpooling
+/** This shrinks a image of size starting from x, y with width and height to scale size image.
+  * @param[in] pxls the image to be shrinked
+  * @param[in] x the x coordinate
+  * @param[in] y the y coordinate
+  * @param[in] width the selected area's width
+  * @param[in] height the selected area's height
+  * @param[in] scaleWidth width after shrinking
+  * @param[in] scaleHeight height after shrinking
+  * @param[in] mode mode to perform shrinking[1: downscaling 2: downsampling 3: maxpooling 4: minpooling]
+  * @return the shrinked image. 
+  */
 RgbImage* shrink(RgbImage* pxls, int x, int y, int width, int height, int scaleWidth, int scaleHeight, int mode) {
 	RgbImage* result = allocate(scaleWidth, scaleHeight);
 

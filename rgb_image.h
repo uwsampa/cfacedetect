@@ -11,17 +11,26 @@
 #define min(X, Y)  ((X) < (Y) ? (X) : (Y))
 #define max(X, Y)  ((X) > (Y) ? (X) : (Y))
 
+/// Struct storing rgb pixel value
 typedef struct {
-   float r;
-   float g;
-   float b;
+	/// r value
+	float r;
+	/// g value
+	float g;
+	/// b value
+	float b;
 } RgbPixel;
 
+/// Struct storing rgb image
 typedef struct {
-   int w;
-   int h;
-   RgbPixel** pixels;
-   char* meta;
+	/// width
+	int w;
+	/// height
+	int h;
+	/// array of arrays of rgb pixels
+	RgbPixel** pixels;
+	/// meta tag
+	char* meta;
 } RgbImage;
 
 void initRgbImage(RgbImage* image);

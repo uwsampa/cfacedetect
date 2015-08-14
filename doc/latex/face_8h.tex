@@ -1,0 +1,131 @@
+\hypertarget{face_8h}{}\section{face.\+h File Reference}
+\label{face_8h}\index{face.\+h@{face.\+h}}
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structFace}{Face}
+\begin{DoxyCompactList}\small\item\em Linked list structure for storing a face with x, y and window size. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{face_8h_a8195a86b6d75b9a3939505e8bb50021e}{min}(X,  Y)~((X) $<$ (Y) ? (X) \+: (Y))
+\item 
+\#define \hyperlink{face_8h_ab95f7757e11b270d27b95ec0d8e798b5}{max}(X,  Y)~((X) $>$ (Y) ? (X) \+: (Y))
+\end{DoxyCompactItemize}
+\subsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \hyperlink{structFace}{Face} \hyperlink{face_8h_a698a8e7042078a426a265ac5f8c43a9b}{Face}
+\begin{DoxyCompactList}\small\item\em Linked list structure for storing a face with x, y and window size. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{structFace}{Face} $\ast$ \hyperlink{face_8h_a53a5e96bc7b4226ef1d576211fd67b65}{push} (\hyperlink{structFace}{Face} $\ast$\hyperlink{detect_8c_a17fdeb7adf100e52522161e5fd109f3a}{head}, int window, int x, int y)
+\item 
+bool \hyperlink{face_8h_abf347ff8df6efb57e29dc5281cbed157}{overlap} (\hyperlink{structFace}{Face} $\ast$rect1, \hyperlink{structFace}{Face} $\ast$rect2)
+\item 
+\hyperlink{structFace}{Face} $\ast$ \hyperlink{face_8h_a1bb04392bc8356217f09f516cc3555e5}{delete\+Next} (\hyperlink{structFace}{Face} $\ast$node)
+\item 
+void \hyperlink{face_8h_a837ad4077cf612d0de767adec6ca3126}{printfree} (\hyperlink{structFace}{Face} $\ast$\hyperlink{detect_8c_a17fdeb7adf100e52522161e5fd109f3a}{head})
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{face_8h_ab95f7757e11b270d27b95ec0d8e798b5}{}\index{face.\+h@{face.\+h}!max@{max}}
+\index{max@{max}!face.\+h@{face.\+h}}
+\subsubsection[{max}]{\setlength{\rightskip}{0pt plus 5cm}\#define max(
+\begin{DoxyParamCaption}
+\item[{}]{X, }
+\item[{}]{Y}
+\end{DoxyParamCaption}
+)~((X) $>$ (Y) ? (X) \+: (Y))}\label{face_8h_ab95f7757e11b270d27b95ec0d8e798b5}
+\hypertarget{face_8h_a8195a86b6d75b9a3939505e8bb50021e}{}\index{face.\+h@{face.\+h}!min@{min}}
+\index{min@{min}!face.\+h@{face.\+h}}
+\subsubsection[{min}]{\setlength{\rightskip}{0pt plus 5cm}\#define min(
+\begin{DoxyParamCaption}
+\item[{}]{X, }
+\item[{}]{Y}
+\end{DoxyParamCaption}
+)~((X) $<$ (Y) ? (X) \+: (Y))}\label{face_8h_a8195a86b6d75b9a3939505e8bb50021e}
+
+
+\subsection{Typedef Documentation}
+\hypertarget{face_8h_a698a8e7042078a426a265ac5f8c43a9b}{}\index{face.\+h@{face.\+h}!Face@{Face}}
+\index{Face@{Face}!face.\+h@{face.\+h}}
+\subsubsection[{Face}]{\setlength{\rightskip}{0pt plus 5cm}typedef struct {\bf Face}  {\bf Face}}\label{face_8h_a698a8e7042078a426a265ac5f8c43a9b}
+
+
+Linked list structure for storing a face with x, y and window size. 
+
+
+
+\subsection{Function Documentation}
+\hypertarget{face_8h_a1bb04392bc8356217f09f516cc3555e5}{}\index{face.\+h@{face.\+h}!delete\+Next@{delete\+Next}}
+\index{delete\+Next@{delete\+Next}!face.\+h@{face.\+h}}
+\subsubsection[{delete\+Next(\+Face $\ast$node)}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Face}$\ast$ delete\+Next (
+\begin{DoxyParamCaption}
+\item[{{\bf Face} $\ast$}]{node}
+\end{DoxyParamCaption}
+)}\label{face_8h_a1bb04392bc8356217f09f516cc3555e5}
+Delete the face right after node(\+Note it cannot delete head) 
+\begin{DoxyParams}{Parameters}
+{\em node} & previous node before the deleted one \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the node right after the deleted one 
+\end{DoxyReturn}
+\hypertarget{face_8h_abf347ff8df6efb57e29dc5281cbed157}{}\index{face.\+h@{face.\+h}!overlap@{overlap}}
+\index{overlap@{overlap}!face.\+h@{face.\+h}}
+\subsubsection[{overlap(\+Face $\ast$rect1, Face $\ast$rect2)}]{\setlength{\rightskip}{0pt plus 5cm}bool overlap (
+\begin{DoxyParamCaption}
+\item[{{\bf Face} $\ast$}]{rect1, }
+\item[{{\bf Face} $\ast$}]{rect2}
+\end{DoxyParamCaption}
+)}\label{face_8h_abf347ff8df6efb57e29dc5281cbed157}
+Check if rect1 and rect2 overlap by more than 40\% 
+\begin{DoxyParams}{Parameters}
+{\em rect1} & face 1 \\
+\hline
+{\em rect2} & face 2 \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true if overlaps, false otherwise 
+\end{DoxyReturn}
+\hypertarget{face_8h_a837ad4077cf612d0de767adec6ca3126}{}\index{face.\+h@{face.\+h}!printfree@{printfree}}
+\index{printfree@{printfree}!face.\+h@{face.\+h}}
+\subsubsection[{printfree(\+Face $\ast$head)}]{\setlength{\rightskip}{0pt plus 5cm}void printfree (
+\begin{DoxyParamCaption}
+\item[{{\bf Face} $\ast$}]{head}
+\end{DoxyParamCaption}
+)}\label{face_8h_a837ad4077cf612d0de767adec6ca3126}
+Prints all the faces from the linked list starting from head and free them accordingly 
+\begin{DoxyParams}{Parameters}
+{\em head} & the head of list \\
+\hline
+\end{DoxyParams}
+\hypertarget{face_8h_a53a5e96bc7b4226ef1d576211fd67b65}{}\index{face.\+h@{face.\+h}!push@{push}}
+\index{push@{push}!face.\+h@{face.\+h}}
+\subsubsection[{push(\+Face $\ast$head, int window, int x, int y)}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Face}$\ast$ push (
+\begin{DoxyParamCaption}
+\item[{{\bf Face} $\ast$}]{head, }
+\item[{int}]{window, }
+\item[{int}]{x, }
+\item[{int}]{y}
+\end{DoxyParamCaption}
+)}\label{face_8h_a53a5e96bc7b4226ef1d576211fd67b65}
+Append face(window, x, y) to the end of linked list starting from head 
+\begin{DoxyParams}{Parameters}
+{\em head} & head of the list \\
+\hline
+{\em window} & window size \\
+\hline
+{\em x} & x coordinate \\
+\hline
+{\em y} & y coordinate \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the newly updated head 
+\end{DoxyReturn}

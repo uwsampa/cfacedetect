@@ -1,0 +1,84 @@
+\hypertarget{parse_8c}{}\section{parse.\+c File Reference}
+\label{parse_8c}\index{parse.\+c@{parse.\+c}}
+{\ttfamily \#include $<$stdio.\+h$>$}\\*
+{\ttfamily \#include $<$stdlib.\+h$>$}\\*
+{\ttfamily \#include $<$string.\+h$>$}\\*
+{\ttfamily \#include \char`\"{}parse.\+h\char`\"{}}\\*
+{\ttfamily \#include $<$libxml2/libxml/parser.\+h$>$}\\*
+{\ttfamily \#include $<$libxml2/libxml/xpath.\+h$>$}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{parse_8c_a8e18b9a5e725138e12d5bb0cdf8ca584}{V\+A\+L\+U\+E}(X)~(char $\ast$)X-\/$>$nodesetval-\/$>$node\+Tab\mbox{[}0\mbox{]}-\/$>$xml\+Children\+Node-\/$>$content
+\begin{DoxyCompactList}\small\item\em evaluates the content in node \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+xml\+X\+Path\+Object\+Ptr \hyperlink{parse_8c_afb5eef0988bcade7c868e072fa5e3e47}{getnodeset} (xml\+Doc\+Ptr doc, xml\+Char $\ast$xpath)
+\item 
+void \hyperlink{parse_8c_a308e9c9a3b31c4ba2b0a762578bff249}{free\+Cascade} (\hyperlink{structCascade}{Cascade} $\ast$cas)
+\item 
+\hyperlink{structCascade}{Cascade} $\ast$ \hyperlink{parse_8c_ab06803ee7b89c89fbab8fc1781c180b3}{load\+Cascade} (char $\ast$path)
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{parse_8c_a8e18b9a5e725138e12d5bb0cdf8ca584}{}\index{parse.\+c@{parse.\+c}!V\+A\+L\+U\+E@{V\+A\+L\+U\+E}}
+\index{V\+A\+L\+U\+E@{V\+A\+L\+U\+E}!parse.\+c@{parse.\+c}}
+\subsubsection[{V\+A\+L\+U\+E}]{\setlength{\rightskip}{0pt plus 5cm}\#define V\+A\+L\+U\+E(
+\begin{DoxyParamCaption}
+\item[{}]{X}
+\end{DoxyParamCaption}
+)~(char $\ast$)X-\/$>$nodesetval-\/$>$node\+Tab\mbox{[}0\mbox{]}-\/$>$xml\+Children\+Node-\/$>$content}\label{parse_8c_a8e18b9a5e725138e12d5bb0cdf8ca584}
+
+
+evaluates the content in node 
+
+
+
+\subsection{Function Documentation}
+\hypertarget{parse_8c_a308e9c9a3b31c4ba2b0a762578bff249}{}\index{parse.\+c@{parse.\+c}!free\+Cascade@{free\+Cascade}}
+\index{free\+Cascade@{free\+Cascade}!parse.\+c@{parse.\+c}}
+\subsubsection[{free\+Cascade(\+Cascade $\ast$cas)}]{\setlength{\rightskip}{0pt plus 5cm}void free\+Cascade (
+\begin{DoxyParamCaption}
+\item[{{\bf Cascade} $\ast$}]{cas}
+\end{DoxyParamCaption}
+)}\label{parse_8c_a308e9c9a3b31c4ba2b0a762578bff249}
+Freeing the cascade from memory 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em cas} & pointer to cascade \\
+\hline
+\end{DoxyParams}
+\hypertarget{parse_8c_afb5eef0988bcade7c868e072fa5e3e47}{}\index{parse.\+c@{parse.\+c}!getnodeset@{getnodeset}}
+\index{getnodeset@{getnodeset}!parse.\+c@{parse.\+c}}
+\subsubsection[{getnodeset(xml\+Doc\+Ptr doc, xml\+Char $\ast$xpath)}]{\setlength{\rightskip}{0pt plus 5cm}xml\+X\+Path\+Object\+Ptr getnodeset (
+\begin{DoxyParamCaption}
+\item[{xml\+Doc\+Ptr}]{doc, }
+\item[{xml\+Char $\ast$}]{xpath}
+\end{DoxyParamCaption}
+)}\label{parse_8c_afb5eef0988bcade7c868e072fa5e3e47}
+Retrieve the wanted nodeset from doc 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em doc} & xml document \\
+\hline
+\mbox{\tt in}  & {\em xpath} & path to the nodeset \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+an xmlptr points to the wanted nodeset 
+\end{DoxyReturn}
+\hypertarget{parse_8c_ab06803ee7b89c89fbab8fc1781c180b3}{}\index{parse.\+c@{parse.\+c}!load\+Cascade@{load\+Cascade}}
+\index{load\+Cascade@{load\+Cascade}!parse.\+c@{parse.\+c}}
+\subsubsection[{load\+Cascade(char $\ast$path)}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Cascade}$\ast$ load\+Cascade (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{path}
+\end{DoxyParamCaption}
+)}\label{parse_8c_ab06803ee7b89c89fbab8fc1781c180b3}
+Load the cascade from path 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em path} & file path to xml file \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+pointer to the loaded cascade 
+\end{DoxyReturn}

@@ -5,15 +5,18 @@
 2. Type `make` to compile it. Make sure libxml2 and fann is installed.
 
 3. Run `./detect <rgb filename>` for face detection. 
+ * make sure turns off DATA flag in detect.c
+ * turns on APPROX flag for fann activation
+ * turns on DEBUG flag for debug info
+ * turns on ADAPTIVE_STEP flag for adaptive steping
+ * switch version of face detection with VERSION
 
 4. Run `python data.py <directory> <output>` for data collection.
  * make sure turns on DATA flag in detect.c.
 
 Note: detect only works for rgb picture files
 
-Use png2rgb.py or jpg2rgb.py for image conversion.
- * To convert from RGB to PNG: `$ python png2rgb.py png <rgb filename> <png filename>`
- * To convert from PNG to RGB: `$ python png2rgb.py rgb <png filename> <rgb filename>`
- * To convert from JPG to RGB: `$ python jpg2rgb.py <jpg filename>`
+Use torgb.py for image conversion.
+ * `$ python torgb.py <input>`
 
 

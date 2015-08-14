@@ -1,0 +1,194 @@
+\hypertarget{namespacecompare}{}\section{compare Namespace Reference}
+\label{namespacecompare}\index{compare@{compare}}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+def \hyperlink{namespacecompare_aa0c59464d2339c77a1d07202f854b8da}{cfunc} (image\+Path)
+\begin{DoxyCompactList}\small\item\em Calling the C version face detection. \end{DoxyCompactList}\item 
+def \hyperlink{namespacecompare_ab0b90ece2676a4ed2b6a0b9c0a586cfb}{pfunc} (image\+Path, \hyperlink{namespacecompare_a2e7fcdc543e6a0fde614081764c7b5f8}{classifier}, \hyperlink{namespacecompare_a54c639c8b89bbd55f7362ec8285739bc}{features}, bound)
+\begin{DoxyCompactList}\small\item\em Cally Python version face detection. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+list \hyperlink{namespacecompare_a2e7fcdc543e6a0fde614081764c7b5f8}{classifier} = \mbox{[}$\,$\mbox{]}
+\begin{DoxyCompactList}\small\item\em Compare the output from two versions of face detection algorithm(Python vs. \end{DoxyCompactList}\item 
+list \hyperlink{namespacecompare_a54c639c8b89bbd55f7362ec8285739bc}{features} = \mbox{[}$\,$\mbox{]}
+\begin{DoxyCompactList}\small\item\em features \end{DoxyCompactList}\item 
+tuple \hyperlink{namespacecompare_a7df7a3d32659e674d401b10b07fbfd4d}{directory} = str(sys.\+argv\mbox{[}1\mbox{]})
+\item 
+tuple \hyperlink{namespacecompare_a7506c3070e47d967e5139c47d0924ee1}{jpgs} = glob.\+glob(\hyperlink{namespacecompare_a7df7a3d32659e674d401b10b07fbfd4d}{directory} + \char`\"{}$\ast$.jpg\char`\"{})
+\item 
+int \hyperlink{namespacecompare_a003350551b423c4ce3833c717bb8157d}{pt} = 0
+\begin{DoxyCompactList}\small\item\em python total running time \end{DoxyCompactList}\item 
+int \hyperlink{namespacecompare_a99b344e9432b3e529d933a2b437096a3}{ct} = 0
+\begin{DoxyCompactList}\small\item\em c total running time \end{DoxyCompactList}\item 
+float \hyperlink{namespacecompare_afed0a531b3a338fe271715b204fb5d6f}{error} = 0.\+0
+\begin{DoxyCompactList}\small\item\em number of differences \end{DoxyCompactList}\item 
+tuple \hyperlink{namespacecompare_aa6ed51fdf2d385739579bec3f610e8e7}{count} = len(\hyperlink{namespacecompare_a7506c3070e47d967e5139c47d0924ee1}{jpgs})
+\begin{DoxyCompactList}\small\item\em number of images \end{DoxyCompactList}\item 
+tuple \hyperlink{namespacecompare_a9224020c6bf7df9437049feaa2622d71}{name} = jpg.\+split(\char`\"{}.\char`\"{})
+\begin{DoxyCompactList}\small\item\em name of the jpg file \end{DoxyCompactList}\item 
+tuple \hyperlink{namespacecompare_accd40faa0aeb12a425478f97f8fda2dd}{ps} = time.\+time()
+\begin{DoxyCompactList}\small\item\em time python starts running \end{DoxyCompactList}\item 
+tuple \hyperlink{namespacecompare_aef7f0f6d99cb687ae445a08bd0aaa529}{pf} = \hyperlink{namespacecompare_ab0b90ece2676a4ed2b6a0b9c0a586cfb}{pfunc}(jpg, \hyperlink{namespacecompare_a2e7fcdc543e6a0fde614081764c7b5f8}{classifier}, \hyperlink{namespacecompare_a54c639c8b89bbd55f7362ec8285739bc}{features}, bound)
+\begin{DoxyCompactList}\small\item\em faces returned from python \end{DoxyCompactList}\item 
+tuple \hyperlink{namespacecompare_a2a03a17585ac65fef036ccc1f66d01e0}{pe} = time.\+time()
+\begin{DoxyCompactList}\small\item\em python running time \end{DoxyCompactList}\item 
+tuple \hyperlink{namespacecompare_a4b1cdf610b8347cc4d994fe187708545}{cs} = time.\+time()
+\begin{DoxyCompactList}\small\item\em time c starts running \end{DoxyCompactList}\item 
+tuple \hyperlink{namespacecompare_a51fb2e77be48389395beafd6d6756fa9}{cf} = \hyperlink{namespacecompare_aa0c59464d2339c77a1d07202f854b8da}{cfunc}(\hyperlink{namespacecompare_a9224020c6bf7df9437049feaa2622d71}{name} + \char`\"{}.rgb\char`\"{})
+\begin{DoxyCompactList}\small\item\em faces returned from c \end{DoxyCompactList}\item 
+tuple \hyperlink{namespacecompare_a7387240bcc549d8e8a3dc6ad7ad9e51e}{ce} = time.\+time()
+\begin{DoxyCompactList}\small\item\em c running time \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Function Documentation}
+\hypertarget{namespacecompare_aa0c59464d2339c77a1d07202f854b8da}{}\index{compare@{compare}!cfunc@{cfunc}}
+\index{cfunc@{cfunc}!compare@{compare}}
+\subsubsection[{cfunc(image\+Path)}]{\setlength{\rightskip}{0pt plus 5cm}def compare.\+cfunc (
+\begin{DoxyParamCaption}
+\item[{}]{image\+Path}
+\end{DoxyParamCaption}
+)}\label{namespacecompare_aa0c59464d2339c77a1d07202f854b8da}
+
+
+Calling the C version face detection. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em image\+Path} & path of the input rgb image \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+detected faces 
+\end{DoxyReturn}
+\hypertarget{namespacecompare_ab0b90ece2676a4ed2b6a0b9c0a586cfb}{}\index{compare@{compare}!pfunc@{pfunc}}
+\index{pfunc@{pfunc}!compare@{compare}}
+\subsubsection[{pfunc(image\+Path, classifier, features, bound)}]{\setlength{\rightskip}{0pt plus 5cm}def compare.\+pfunc (
+\begin{DoxyParamCaption}
+\item[{}]{image\+Path, }
+\item[{}]{classifier, }
+\item[{}]{features, }
+\item[{}]{bound}
+\end{DoxyParamCaption}
+)}\label{namespacecompare_ab0b90ece2676a4ed2b6a0b9c0a586cfb}
+
+
+Cally Python version face detection. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em image\+Path} & image file path \\
+\hline
+\mbox{\tt in}  & {\em classifier} & the haar classifier \\
+\hline
+\mbox{\tt in}  & {\em features} & features to be computed \\
+\hline
+\mbox{\tt in}  & {\em bound} & window size \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+detected faces 
+\end{DoxyReturn}
+
+
+\subsection{Variable Documentation}
+\hypertarget{namespacecompare_a7387240bcc549d8e8a3dc6ad7ad9e51e}{}\index{compare@{compare}!ce@{ce}}
+\index{ce@{ce}!compare@{compare}}
+\subsubsection[{ce}]{\setlength{\rightskip}{0pt plus 5cm}tuple compare.\+ce = time.\+time()}\label{namespacecompare_a7387240bcc549d8e8a3dc6ad7ad9e51e}
+
+
+c running time 
+
+\hypertarget{namespacecompare_a51fb2e77be48389395beafd6d6756fa9}{}\index{compare@{compare}!cf@{cf}}
+\index{cf@{cf}!compare@{compare}}
+\subsubsection[{cf}]{\setlength{\rightskip}{0pt plus 5cm}tuple compare.\+cf = {\bf cfunc}({\bf name} + \char`\"{}.rgb\char`\"{})}\label{namespacecompare_a51fb2e77be48389395beafd6d6756fa9}
+
+
+faces returned from c 
+
+\hypertarget{namespacecompare_a2e7fcdc543e6a0fde614081764c7b5f8}{}\index{compare@{compare}!classifier@{classifier}}
+\index{classifier@{classifier}!compare@{compare}}
+\subsubsection[{classifier}]{\setlength{\rightskip}{0pt plus 5cm}list compare.\+classifier = \mbox{[}$\,$\mbox{]}}\label{namespacecompare_a2e7fcdc543e6a0fde614081764c7b5f8}
+
+
+Compare the output from two versions of face detection algorithm(Python vs. 
+
+C) and their running time \begin{DoxyItemize}
+\item the input image directory Haar classifier \end{DoxyItemize}
+\hypertarget{namespacecompare_aa6ed51fdf2d385739579bec3f610e8e7}{}\index{compare@{compare}!count@{count}}
+\index{count@{count}!compare@{compare}}
+\subsubsection[{count}]{\setlength{\rightskip}{0pt plus 5cm}tuple compare.\+count = len({\bf jpgs})}\label{namespacecompare_aa6ed51fdf2d385739579bec3f610e8e7}
+
+
+number of images 
+
+\hypertarget{namespacecompare_a4b1cdf610b8347cc4d994fe187708545}{}\index{compare@{compare}!cs@{cs}}
+\index{cs@{cs}!compare@{compare}}
+\subsubsection[{cs}]{\setlength{\rightskip}{0pt plus 5cm}tuple compare.\+cs = time.\+time()}\label{namespacecompare_a4b1cdf610b8347cc4d994fe187708545}
+
+
+time c starts running 
+
+\hypertarget{namespacecompare_a99b344e9432b3e529d933a2b437096a3}{}\index{compare@{compare}!ct@{ct}}
+\index{ct@{ct}!compare@{compare}}
+\subsubsection[{ct}]{\setlength{\rightskip}{0pt plus 5cm}int compare.\+ct = 0}\label{namespacecompare_a99b344e9432b3e529d933a2b437096a3}
+
+
+c total running time 
+
+\hypertarget{namespacecompare_a7df7a3d32659e674d401b10b07fbfd4d}{}\index{compare@{compare}!directory@{directory}}
+\index{directory@{directory}!compare@{compare}}
+\subsubsection[{directory}]{\setlength{\rightskip}{0pt plus 5cm}tuple compare.\+directory = str(sys.\+argv\mbox{[}1\mbox{]})}\label{namespacecompare_a7df7a3d32659e674d401b10b07fbfd4d}
+\hypertarget{namespacecompare_afed0a531b3a338fe271715b204fb5d6f}{}\index{compare@{compare}!error@{error}}
+\index{error@{error}!compare@{compare}}
+\subsubsection[{error}]{\setlength{\rightskip}{0pt plus 5cm}float compare.\+error = 0.\+0}\label{namespacecompare_afed0a531b3a338fe271715b204fb5d6f}
+
+
+number of differences 
+
+\hypertarget{namespacecompare_a54c639c8b89bbd55f7362ec8285739bc}{}\index{compare@{compare}!features@{features}}
+\index{features@{features}!compare@{compare}}
+\subsubsection[{features}]{\setlength{\rightskip}{0pt plus 5cm}list compare.\+features = \mbox{[}$\,$\mbox{]}}\label{namespacecompare_a54c639c8b89bbd55f7362ec8285739bc}
+
+
+features 
+
+\hypertarget{namespacecompare_a7506c3070e47d967e5139c47d0924ee1}{}\index{compare@{compare}!jpgs@{jpgs}}
+\index{jpgs@{jpgs}!compare@{compare}}
+\subsubsection[{jpgs}]{\setlength{\rightskip}{0pt plus 5cm}tuple compare.\+jpgs = glob.\+glob({\bf directory} + \char`\"{}$\ast$.jpg\char`\"{})}\label{namespacecompare_a7506c3070e47d967e5139c47d0924ee1}
+\hypertarget{namespacecompare_a9224020c6bf7df9437049feaa2622d71}{}\index{compare@{compare}!name@{name}}
+\index{name@{name}!compare@{compare}}
+\subsubsection[{name}]{\setlength{\rightskip}{0pt plus 5cm}tuple compare.\+name = jpg.\+split(\char`\"{}.\char`\"{})}\label{namespacecompare_a9224020c6bf7df9437049feaa2622d71}
+
+
+name of the jpg file 
+
+\hypertarget{namespacecompare_a2a03a17585ac65fef036ccc1f66d01e0}{}\index{compare@{compare}!pe@{pe}}
+\index{pe@{pe}!compare@{compare}}
+\subsubsection[{pe}]{\setlength{\rightskip}{0pt plus 5cm}tuple compare.\+pe = time.\+time()}\label{namespacecompare_a2a03a17585ac65fef036ccc1f66d01e0}
+
+
+python running time 
+
+\hypertarget{namespacecompare_aef7f0f6d99cb687ae445a08bd0aaa529}{}\index{compare@{compare}!pf@{pf}}
+\index{pf@{pf}!compare@{compare}}
+\subsubsection[{pf}]{\setlength{\rightskip}{0pt plus 5cm}tuple compare.\+pf = {\bf pfunc}(jpg, {\bf classifier}, {\bf features}, bound)}\label{namespacecompare_aef7f0f6d99cb687ae445a08bd0aaa529}
+
+
+faces returned from python 
+
+\hypertarget{namespacecompare_accd40faa0aeb12a425478f97f8fda2dd}{}\index{compare@{compare}!ps@{ps}}
+\index{ps@{ps}!compare@{compare}}
+\subsubsection[{ps}]{\setlength{\rightskip}{0pt plus 5cm}tuple compare.\+ps = time.\+time()}\label{namespacecompare_accd40faa0aeb12a425478f97f8fda2dd}
+
+
+time python starts running 
+
+\hypertarget{namespacecompare_a003350551b423c4ce3833c717bb8157d}{}\index{compare@{compare}!pt@{pt}}
+\index{pt@{pt}!compare@{compare}}
+\subsubsection[{pt}]{\setlength{\rightskip}{0pt plus 5cm}int compare.\+pt = 0}\label{namespacecompare_a003350551b423c4ce3833c717bb8157d}
+
+
+python total running time 
+
