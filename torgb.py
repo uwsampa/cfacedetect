@@ -10,7 +10,7 @@ def torgb(filePath):
 	rgb = open(name + ".rgb", "w")
 
 	rgb.write(str(im.size[0]) + "," + str(im.size[1]) + "\n")
-	
+
 	for y in range(0, im.size[1]):
 		rgb.write(str(pix[0, y][0]) + "," + str(pix[0, y][1]) + "," + str(pix[0, y][2]))
 		for x in range(1, im.size[0]):

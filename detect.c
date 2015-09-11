@@ -26,7 +26,7 @@
 
 
 /// Turns on FANN evaluation
-#define APPROX false 
+#define APPROX false
 
 /// Turns on merging when collecting results
 #define MERGE true
@@ -49,7 +49,7 @@
 #define CASCADE "xml/ocv_clsfr.xml"
 
 /// Input picture file path (when no input image specified)
-#define INPIC "Images/single_sm.rgb"
+#define INPIC "albert.rgb"
 
 /// FANN file path
 #define NN "vision_3L_36N.net"
@@ -95,7 +95,7 @@ int count = 0;
 
 /** This computes an integral image from pxls
   * @param[in][in] pxls pixel values
-  * @param[in][in] isSquared flag to determine 
+  * @param[in][in] isSquared flag to determine
   *            if integral image needs to be squared
   * @return pointer to computed integral RgbImage
   */
@@ -271,7 +271,7 @@ void detectSingleScale(RgbImage* pxls, RgbImage* integral, RgbImage* integralsq,
 				//for each classifier in the stage
 				for (j = 0; j < classifier->stages[i].nodeNum; j++) {
 					Node thisNode = classifier->stages[i].nodeList[j];
-					
+
 					//sum in rectangle is D - B - C + A
 					float totalFeatureVal;
 					#if VERSION == 0
@@ -361,7 +361,7 @@ void approxDetectSingleScale(struct fann *ann, RgbImage* pxls, int window) {
 }
 
 /** Initiating detectSingleScale/approxDetectSingleScale with
-  * increased window size and scaled features scanning through 
+  * increased window size and scaled features scanning through
   * the image
   * @param[in] pxls input RgbImage
   * @param[in] classifier the haar classifier
@@ -479,5 +479,5 @@ int main(int argc, char **argv) {
 		freeCascade(classifier);
 	}
 	return 0;
-	
+
 }
