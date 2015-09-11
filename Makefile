@@ -12,7 +12,7 @@ detect: $(OBJS)
 	$(CC) $(CFLAGS) -o detect $(OBJS) $(LINK) $(FANNARGS)
 
 %.o: %.c $(HEADERS)
-	$(CC) $(CFLAGS) -c -I$(SCPATH) $(LINK) -o $@ $<
+	$(CC) $(CFLAGS) -c -I$(SCPATH) -o $@ $<
 
 clean:
 	rm -rf *.o detect *.pyc detect.dSYM
