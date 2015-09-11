@@ -1,40 +1,18 @@
-
 CC = gcc
-
-SCPATH = /usr/include/libxml2
-
-LIB = /usr/local/lib
-
-OBJS = rgb_image.o parse.o detect.o shrink.o face.o
-
 CFLAGS = -O3 -Wall -g -std=c11
-
+SCPATH = /usr/include/libxml2
+FANNARGS = -I fann/ -I fann/include/ fann/floatfann.c
+LINK = -lxml2 -lm -lfann
+OBJS = rgb_image.o parse.o detect.o shrink.o face.o
 HEADERS = parse.h rgb_image.h shrink.h face.h
 
-LINK = -lxml2 -lm -lfann
+all: detect
 
+detect: $(OBJS)
+	$(CC) $(CFLAGS) -o detect $(OBJS) $(LINK) $(FANNARGS)
 
-all: detect FORCE
+%.o: %.c $(HEADERS)
+	$(CC) $(CFLAGS) -c -I$(SCPATH) $(LINK) -o $@ $<
 
-detect: $(OBJS) FORCE
-	$(CC) $(CFLAGS) -o detect $(OBJS) -I$(SCPATH) -L$(LIB) $(LINK) -I fann/ -I fann/include/ fann/floatfann.c
-
-detect.o: detect.c $(HEADERS) FORCE
-	$(CC) $(CFLAGS) -c $< -o detect.o
-
-shrink.o: shrink.c rgb_image.h FORCE
-	$(CC) $(CFLAGS) -c $< -o shrink.o 
-
-face.o: face.c face.h FORCE
-	$(CC) $(CFLAGS) -c $< -o face.o
-
-rgb_image.o: rgb_image.c rgb_image.h FORCE
-	$(CC) $(CFLAGS) -c $< -o rgb_image.o 
-
-parse.o: parse.c parse.h FORCE
-	$(CC) $(CFLAGS) -c $< -o parse.o -I$(SCPATH) -L$(LIB) $(LINK)
-
-clean: FORCE
-	rm -f *.o detect *.pyc
-
-FORCE: 
+clean:
+	rm -rf *.o detect *.pyc detect.dSYM
