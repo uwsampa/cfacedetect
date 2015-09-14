@@ -37,6 +37,8 @@ void initRgbImage(RgbImage* image);
 
 int loadRgbImage(const char* fileName, RgbImage* image);
 
+RgbImage* allocRgbImage(int width, int height);
+
 int saveRgbImage(RgbImage* image, const char* fileName, float grayscale);
 
 void freeRgbImage(RgbImage* image);
@@ -44,5 +46,7 @@ void freeRgbImage(RgbImage* image);
 void makeGrayscale(RgbImage* rgbImage);
 
 void grayscale(RgbImage* image);
+
+void checkIntegrity(RgbImage * image);
 
 #endif /* RGB_IMAGE_H_ */

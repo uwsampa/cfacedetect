@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <time.h>
+#include <assert.h>
 #include "face.h"
 #include "floatfann.h"
 #include "parse.h"
@@ -31,19 +32,19 @@
 /// Turns on merging when collecting results
 #define MERGE true
 
-/** Scales image in 4 modes
-  * 1: downscaling
-  * 2: downsampling
-  * 3: maxpooling
-  * 4: minpooling
-  */
-#define MODE 2
-
 ///Turns on debugging information
 #define DEBUG false
 
 /// Turns on data collection
-#define DATA false
+#define DATA true
+
+// Inverse probability of recording a
+// negative sample (balances-out the
+// negative vs. positive count)
+#define DRAW_PROB 1
+
+/// Default data output path
+#define DATA_FN "train"
 
 /// HAAR cascade file path
 #define CASCADE "xml/ocv_clsfr.xml"
@@ -72,25 +73,26 @@ Face* head = NULL;
 /// number of faces in list
 int count = 0;
 
-#if DATA
-	char* filePath;
+/// name of the data file name
+char * dataFileName = DATA_FN;
 
-	void printPix(RgbImage* result, int num) {
-		FILE* fp;
-		int i, j;
+/** This function dumps a window of pixels
+  * to a specified file for data collection
+  * purposes.
+  * @param[in][in] result window of pixels
+  * @param[in][in] num whether it is a face or not
+  */
+void printPix(RgbImage* result, int num, FILE* fp) {
 
-		fp = fopen(filePath, "a");
+	int i, j;
 
-		for (i = 0; i < DEFSIZE; i++) {
-			for (j = 0; j < DEFSIZE; j++) {
-				fprintf(fp, "%f ", result->pixels[i][j].r / 255.0);
-			}
+	for (i = 0; i < DEFSIZE; i++) {
+		for (j = 0; j < DEFSIZE; j++) {
+			fprintf(fp, "%f ", result->pixels[i][j].r / 255.0);
 		}
-		fprintf(fp, "\n");
-		fprintf(fp, "%d\n", num);
-		fclose(fp);
 	}
-#endif //DATA
+	fprintf(fp, "\n%d\n", num);
+}
 
 
 /** This computes an integral image from pxls
@@ -102,7 +104,7 @@ int count = 0;
 RgbImage* integralImage(RgbImage* pxls, int isSquared) {
 
 	//Initialize and allocate for RgbImage
-	RgbImage* result = allocate(pxls->w, pxls->h);
+	RgbImage* result = allocRgbImage(pxls->w, pxls->h);
 
 	if(result == NULL) {
 		return NULL;
@@ -232,6 +234,18 @@ void detectSingleScale(RgbImage* pxls, RgbImage* integral, RgbImage* integralsq,
 	int area = window * window;
 	int y, x;
 
+	char filePath_pos[256];
+	char filePath_neg[256];
+	strcpy(filePath_pos, dataFileName);
+	strcpy(filePath_neg, dataFileName);
+	strcat(filePath_pos, ".pos.data");
+	strcat(filePath_neg, ".neg.data");
+
+	FILE* fp_pos = fopen(filePath_pos, "a");
+	FILE* fp_neg = fopen(filePath_neg, "a");
+
+	assert(fp_neg && fp_pos && "Could not open data files!");
+
 	int y_step_size, x_step_size;
 	#if VERSION == 0
 		#if ADAPTIVE_STEP
@@ -251,8 +265,9 @@ void detectSingleScale(RgbImage* pxls, RgbImage* integral, RgbImage* integralsq,
 		//slide the window along the x axis by X_STEP_SIZE
 		for (x = 0; x < width - window; x += x_step_size) {
 
+
 			#if DATA
-				RgbImage* result = shrink(pxls, x, y, window, window, DEFSIZE, DEFSIZE, MODE);
+				RgbImage* result = shrink(pxls, x, y, window, window, DEFSIZE, DEFSIZE);
 			#endif
 
 			float mean = getMean(integral, x, y, window, area);
@@ -289,9 +304,9 @@ void detectSingleScale(RgbImage* pxls, RgbImage* integral, RgbImage* integralsq,
 
 				if (stagePassThresh < classifier->stages[i].threshold) {
 					#if DATA
-						int r = rand() % 1000;
-						if (r == 999) {
-							printPix(result, 0);
+						int r = rand() % DRAW_PROB;
+						if (r == DRAW_PROB-1) {
+							printPix(result, 0, fp_neg);
 						}
 					#endif
 					break;
@@ -299,7 +314,7 @@ void detectSingleScale(RgbImage* pxls, RgbImage* integral, RgbImage* integralsq,
 
 				if ( i + 1 == classifier->stgNum) {
 					#if DATA
-						printPix(result, 1);
+						printPix(result, 1, fp_pos);
 					#endif
 					#if VERSION == 0
 						head = push(head, window, x, y);
@@ -315,6 +330,10 @@ void detectSingleScale(RgbImage* pxls, RgbImage* integral, RgbImage* integralsq,
 			#endif
 		}
 	}
+
+
+	fclose(fp_pos);
+	fclose(fp_neg);
 }
 
 /** Using FANN approximate detectSingleScale
@@ -333,7 +352,7 @@ void approxDetectSingleScale(struct fann *ann, RgbImage* pxls, int window) {
 	int y, x;
 	for (y = 0; y < height - window; y++) {
 		for (x = 0; x < width - window; x++) {
-			RgbImage* result = shrink(pxls, x, y, window, window, DEFSIZE, DEFSIZE, MODE);
+			RgbImage* result = shrink(pxls, x, y, window, window, DEFSIZE, DEFSIZE);
 
 			if(result == NULL) {
 				return;
@@ -414,7 +433,7 @@ void detectMultiScale(RgbImage* pxls, Cascade* classifier) {
 			shrinkHeight /= SCALE_FACTOR;
 			shrinkSize /= SCALE_FACTOR;
 			scale *= SCALE_FACTOR;
-			RgbImage* shrinked = shrink(pxls, 0, 0, pxls->w, pxls->h, shrinkWidth, shrinkHeight, MODE);
+			RgbImage* shrinked = shrink(pxls, 0, 0, pxls->w, pxls->h, shrinkWidth, shrinkHeight);
 			RgbImage* integral = integralImage(shrinked, 0);
 			RgbImage* integralsq = integralImage(shrinked, 1);
 			detectSingleScale(pxls, integral, integralsq, classifier, (int)window, scale);
@@ -458,19 +477,24 @@ void detect(Cascade* classifier, char* filename) {
 int main(int argc, char **argv) {
 	Cascade* classifier = loadCascade(CASCADE);
 
+	// srand(time(NULL));
+	srand(1);
+
 	if (classifier != NULL) {
 
 		#if DATA
 			if (argc != 3) {
-				printf("Error: wrong arguments for collecting data.\n");
+				printf("Running with default arguments.\n");
 				printf("Usage: %s FILENAME OUTPUT_FILE\n", argv[0]);
+				detect(classifier, INPIC);
 			} else {
-				srand(time(NULL));
-				filePath = argv[2];
+				dataFileName = argv[2];
 				detect(classifier, argv[1]);
 			}
 		#else
 			if (argc != 2) {
+				printf("Running with default arguments.\n");
+				printf("Usage: %s FILENAME\n", argv[0]);
 				detect(classifier, INPIC);
 			} else {
 				detect(classifier, argv[1]);

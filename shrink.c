@@ -1,45 +1,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <assert.h>
 #include "rgb_image.h"
-
-/** Allocates memory for a RgbImage.
-  * @param[in] width the width of RgbImage
-  * @param[in] height the height of RgbImage
-  * @return the allocated pointer
-  */
-RgbImage* allocate(int width, int height) {
-	int i, c = 0;
-
-	//Initialize and allocate for RgbImage
-	RgbImage* result = (RgbImage *)malloc(sizeof(RgbImage));
-	result->w = width;
-	result->h = height;
-	result->meta = NULL;
-
-	result->pixels = (RgbPixel**)malloc(height * sizeof(RgbPixel*));
-	if (result->pixels == NULL) {
-        printf("Warning: Oops! Cannot allocate memory for the pixels!\n");
-        return NULL;
-    }
-	for(i = 0; i < height; i++) {
-        result->pixels[i] = (RgbPixel*)malloc(width * sizeof(RgbPixel));
-        if (result->pixels[i] == NULL) {
-            c = 1;
-            break;
-        }
-    }
-	if (c == 1) {
-		printf("Warning: Oops! Cannot allocate memory for the pixels!\n");
-		for (i--; i >= 0; i--) {
-	    	free(result->pixels[i]);
-	    }
-		free(result->pixels);
-		free(result);
-		return NULL;
-	}
-	return result;
-}
+#include "shrink.h"
 
 /** This shrinks a image of size starting from x, y with width and height to scale size image.
   * @param[in] pxls the image to be shrinked
@@ -49,90 +13,70 @@ RgbImage* allocate(int width, int height) {
   * @param[in] height the selected area's height
   * @param[in] scaleWidth width after shrinking
   * @param[in] scaleHeight height after shrinking
-  * @param[in] mode mode to perform shrinking[1: downscaling 2: downsampling 3: maxpooling 4: minpooling]
-  * @return the shrinked image. 
+  * @return the shrinked image.
   */
-RgbImage* shrink(RgbImage* pxls, int x, int y, int width, int height, int scaleWidth, int scaleHeight, int mode) {
-	RgbImage* result = allocate(scaleWidth, scaleHeight);
+RgbImage* shrink(RgbImage* pxls, int x, int y, int width, int height, int scaleWidth, int scaleHeight) {
+    RgbImage* result = allocRgbImage(scaleWidth, scaleHeight);
 
-	if(result == NULL) {
-		return NULL;
-	}
+    assert(result && "Allocation of image buffer seems to have failed...");
 
-	int scale_factor = width / scaleWidth;
-	int i, j;
+    float scale_factor = (float) width / scaleWidth;
+    int i, j;
 
-	if (mode == 1) {
-		int k, l;
-		for (i = 0; i < scaleHeight; i++) {
-			for (j = 0; j < scaleWidth; j++) {
-				RgbPixel temp = {0.0, 0.0, 0.0};
-				for (k = 0; k < scale_factor; k++) {
-					for (l = 0; l < scale_factor; l++) {
-						int fixedx = i * scale_factor + x + k;
-						int fixedy = j * scale_factor + y + l;
+    #if SHRINK_MODE == 1 // downsampling
+        for (i = 0; i < scaleHeight; i++) {
+            for (j = 0; j < scaleWidth; j++) {
+                int fixedy = (int) ((float) i * scale_factor) + y;
+                int fixedx = (int) ((float) j * scale_factor) + x;
 
-						temp.r += pxls->pixels[fixedx][fixedy].r;
-						temp.g += pxls->pixels[fixedx][fixedy].g;
-						temp.b += pxls->pixels[fixedx][fixedy].b;
-					}
-				}
+                result->pixels[i][j] = pxls->pixels[fixedy][fixedx];;
+            }
+        }
+    #elif (SHRINK_MODE == 2 || SHRINK_MODE == 3 || SHRINK_MODE == 4)
+        int k, l;
+        for (i = 0; i < scaleHeight; i++) {
+            for (j = 0; j < scaleWidth; j++) {
+                #if SHRINK_MODE == 4 //min
+                    RgbPixel temp = {255.0, 255.0, 255.0};
+                #else
+                    RgbPixel temp = {0.0, 0.0, 0.0};
+                #endif //SHRINK_MODE
 
-				result->pixels[i][j].r = temp.r / (scale_factor * scale_factor);
-				result->pixels[i][j].g = temp.g / (scale_factor * scale_factor);
-				result->pixels[i][j].b = temp.b / (scale_factor * scale_factor);
-			}
-		}
-	} else if (mode == 2) {
-		for (i = 0; i < scaleHeight; i++) {
-			for (j = 0; j < scaleWidth; j++) {
-				int fixedx = i * scale_factor + x;
-				int fixedy = j * scale_factor + y;
+                int fixedy = (int) ((float) i * scale_factor) + y;
+                int fixedx = (int) ((float) j * scale_factor) + x;
+                int nxt_fixedy = (int) ((float) (i+1) * scale_factor) + y;
+                int nxt_fixedx = (int) ((float) (j+1) * scale_factor) + x;
 
-				result->pixels[i][j] = pxls->pixels[fixedx][fixedy];
-			}
-		}
-	} else if (mode == 3) {
-		int k, l;
-		for (i = 0; i < scaleHeight; i++) {
-			for (j = 0; j < scaleWidth; j++) {
-				RgbPixel temp = {0.0, 0.0, 0.0};
-				for (k = 0; k < scale_factor; k++) {
-					for (l = 0; l < scale_factor; l++) {
-						int fixedx = i * scale_factor + x + k;
-						int fixedy = j * scale_factor + y + l;
+                for (k = fixedy; k < nxt_fixedy; k++) {
+                    for (l = fixedx; l < nxt_fixedx; l++) {
+                        #if SHRINK_MODE == 2 // average
+                            temp.r += pxls->pixels[fixedy+k][fixedx+l].r;
+                            temp.g += pxls->pixels[fixedy+k][fixedx+l].g;
+                            temp.b += pxls->pixels[fixedy+k][fixedx+l].b;
+                        #elif SHRINK_MODE == 3 // max
+                            temp.r = max(temp.r, pxls->pixels[fixedy+k][fixedx+l].r);
+                            temp.g = max(temp.g, pxls->pixels[fixedy+k][fixedx+l].g);
+                            temp.b = max(temp.b, pxls->pixels[fixedy+k][fixedx+l].b);
+                        #elif SHRINK_MODE == 4 // min
+                            temp.r = min(temp.r, pxls->pixels[fixedy+k][fixedx+l].r);
+                            temp.g = min(temp.g, pxls->pixels[fixedy+k][fixedx+l].g);
+                            temp.b = min(temp.b, pxls->pixels[fixedy+k][fixedx+l].b);
+                        #endif //SHRINK_MODE
+                    }
+                }
 
-						temp.r = max(temp.r, pxls->pixels[fixedx][fixedy].r);
-						temp.g = max(temp.g, pxls->pixels[fixedx][fixedy].g);
-						temp.b = max(temp.b, pxls->pixels[fixedx][fixedy].b);
-					}
-				}
-				result->pixels[i][j].r = temp.r;
-				result->pixels[i][j].g = temp.g;
-				result->pixels[i][j].b = temp.b;
-			}
-		}
-	} else if (mode == 4) {
-		int k, l;
-		for (i = 0; i < scaleHeight; i++) {
-			for (j = 0; j < scaleWidth; j++) {
-				RgbPixel temp = {0.0, 0.0, 0.0};
-				for (k = 0; k < scale_factor; k++) {
-					for (l = 0; l < scale_factor; l++) {
-						int fixedx = i * scale_factor + x + k;
-						int fixedy = j * scale_factor + y + l;
-
-						temp.r = (temp.r == 0.0) ? pxls->pixels[fixedx][fixedy].r : min(temp.r, pxls->pixels[fixedx][fixedy].r);
-						temp.g = (temp.g == 0.0) ? pxls->pixels[fixedx][fixedy].g : min(temp.g, pxls->pixels[fixedx][fixedy].g);
-						temp.b = (temp.b == 0.0) ? pxls->pixels[fixedx][fixedy].b : min(temp.b, pxls->pixels[fixedx][fixedy].b);
-					}
-				}
-				result->pixels[i][j].r = temp.r;
-				result->pixels[i][j].g = temp.g;
-				result->pixels[i][j].b = temp.b;
-			}
-		}
-	}
-	return result;
+                #if SHRINK_MODE == 2 // average
+                    result->pixels[i][j].r = temp.r / (scale_factor * scale_factor);
+                    result->pixels[i][j].g = temp.g / (scale_factor * scale_factor);
+                    result->pixels[i][j].b = temp.b / (scale_factor * scale_factor);
+                #else
+                    result->pixels[i][j].r = temp.r;
+                    result->pixels[i][j].g = temp.g;
+                    result->pixels[i][j].b = temp.b;
+                #endif
+            }
+        }
+    #endif //SHRINK_MODE
+    return result;
 }
 
