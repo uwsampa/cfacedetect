@@ -15,4 +15,4 @@ detect: $(OBJS)
 	$(CC) $(CFLAGS) -c -I$(SCPATH) -o $@ $<
 
 clean:
-	rm -rf *.o detect *.pyc detect.dSYM
+	rm -rf *.o detect *.pyc *.data detect.dSYM
