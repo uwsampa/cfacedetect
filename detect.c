@@ -41,7 +41,7 @@
 // Inverse probability of recording a
 // negative sample (balances-out the
 // negative vs. positive count)
-#define DRAW_PROB 1
+#define DRAW_PROB 100
 
 /// Default data output path
 #define DATA_FN "train"
@@ -82,7 +82,7 @@ char * dataFileName = DATA_FN;
   * @param[in][in] result window of pixels
   * @param[in][in] num whether it is a face or not
   */
-void printPix(RgbImage* result, int num, FILE* fp) {
+void printPix(RgbImage* result, FILE* fp) {
 
 	int i, j;
 
@@ -91,7 +91,7 @@ void printPix(RgbImage* result, int num, FILE* fp) {
 			fprintf(fp, "%f ", result->pixels[i][j].r / 255.0);
 		}
 	}
-	fprintf(fp, "\n%d\n", num);
+	fprintf(fp, "\n");
 }
 
 
@@ -306,7 +306,7 @@ void detectSingleScale(RgbImage* pxls, RgbImage* integral, RgbImage* integralsq,
 					#if DATA
 						int r = rand() % DRAW_PROB;
 						if (r == DRAW_PROB-1) {
-							printPix(result, 0, fp_neg);
+							printPix(result, fp_neg);
 						}
 					#endif
 					break;
@@ -314,7 +314,7 @@ void detectSingleScale(RgbImage* pxls, RgbImage* integral, RgbImage* integralsq,
 
 				if ( i + 1 == classifier->stgNum) {
 					#if DATA
-						printPix(result, 1, fp_pos);
+						printPix(result, fp_pos);
 					#endif
 					#if VERSION == 0
 						head = push(head, window, x, y);
