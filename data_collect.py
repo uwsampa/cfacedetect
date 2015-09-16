@@ -34,7 +34,7 @@ def jpgToRgb(inPath, outPath):
             rgb.write("," + str(pix[x, y][0]) + "," + str(pix[x, y][1]) + "," + str(pix[x, y][2]))
         rgb.write("\n")
 
-def crawl(imdir):
+def crawl(imdir, outfile):
 
     jpegs = []
     for root, dirnames, filenames in os.walk(imdir):
@@ -75,7 +75,7 @@ def crawl(imdir):
             exit()
         trainingSet = process(dataFile)
 
-        with open(DATA_FILE, 'a') as f:
+        with open(outfile, 'a') as f:
             for dat in trainingSet:
                 f.write("{}\n{}\n".format(dat[0], dat[1]))
 
@@ -84,7 +84,6 @@ def crawl(imdir):
 def merge(large, small):
     tempData = []
     sampleIndices = random.sample(xrange(len(large)), len(small))
-    logging.debug("Random indices: {}".format(sampleIndices))
     tempData = [large[i] for i in sampleIndices]
     tempData += small
     random.shuffle(tempData)
@@ -128,6 +127,10 @@ def cli():
         '-log', dest='logpath', action='store', type=str, required=False,
         default=LOG_FILE, help='path to log file'
     )
+    parser.add_argument(
+        '-out', dest='outfile', action='store', type=str, required=False,
+        default=DATA_FILE, help='path to output data file'
+    )
     args = parser.parse_args()
 
     # Take care of log formatting
@@ -149,7 +152,7 @@ def cli():
         rootLogger.setLevel(logging.INFO)
 
     if (os.path.isdir(args.imdir)):
-        crawl(args.imdir)
+        crawl(args.imdir, args.outfile)
     else:
         print ("Error: Directory {} does not exist".format(args.imdir))
 
