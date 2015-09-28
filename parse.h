@@ -1,4 +1,6 @@
-
+/** Hardware parse cascade using 5x5.xml
+  * No more malloc and free
+  */
 
 #ifndef PARSE_H_
 #define PARSE_H_
@@ -50,8 +52,8 @@ typedef struct Cascade{
 }Cascade;
 
 
-Cascade* loadCascade(char* path);
+Cascade* loadCascade();
 
-void freeCascade(Cascade *cas);
+// void freeCascade(Cascade *cas);
 
 #endif

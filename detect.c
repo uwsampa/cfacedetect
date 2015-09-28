@@ -475,8 +475,10 @@ void detect(Cascade* classifier, char* filename) {
 }
 
 int main(int argc, char **argv) {
-	Cascade* classifier = loadCascade(CASCADE);
-
+	// ******* changed for HLS ***********//
+	// Cascade* classifier = loadCascade(CASCADE);
+	Cascade* classifier = loadCascade();
+	
 	// srand(time(NULL));
 	srand(1);
 
@@ -500,7 +502,7 @@ int main(int argc, char **argv) {
 				detect(classifier, argv[1]);
 			}
 		#endif
-		freeCascade(classifier);
+		// freeCascade(classifier);
 	}
 	return 0;
 

@@ -1,6 +1,8 @@
 CC = gcc
 CFLAGS = -O3 -Wall -g -std=c11
-SCPATH = /usr/include/libxml2
+#SCPATH = /usr/include/libxml2
+SCPATH = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk/usr/include/libxml2
+
 FANNARGS = -I fann/ -I fann/include/ fann/floatfann.c
 LINK = -lxml2 -lm -lfann
 OBJS = rgb_image.o parse.o detect.o shrink.o face.o
