@@ -34,7 +34,7 @@ def jpgToRgb(inPath, outPath):
             rgb.write("," + str(pix[x, y][0]) + "," + str(pix[x, y][1]) + "," + str(pix[x, y][2]))
         rgb.write("\n")
 
-def crawl(imdir):
+def collect(imdir, outfile, window):
 
     jpegs = []
     for root, dirnames, filenames in os.walk(imdir):
@@ -54,17 +54,18 @@ def crawl(imdir):
         rgbs.append(rgb)
 
     logging.info('Converted {} jpegs to rgb format'.format(len(rgbs)))
+    logging.info('Now compiling face detection program with window size set to {}'.format(window))
 
     try:
-        shell("make")
+        defineStr = "DEFINES=\"-DDEFSIZE="+str(window)+"\""
+        shell(["make", defineStr])
     except:
-        logging.error('Compiling detect.c failed')
+        logging.error('Compiling face detection program failed')
         exit()
 
     logging.info('Compiled face detection program successfully')
 
-    trainingSet = []
-
+    trainingSamples = []
     for rgb in rgbs:
         dataFile = rgbDir+os.path.splitext(os.path.basename(rgb))[0]
         try:
@@ -73,18 +74,19 @@ def crawl(imdir):
         except:
             logging.error('Face detection on {} failed'.format(rgb))
             exit()
-        trainingSet = process(dataFile)
 
-        with open(DATA_FILE, 'a') as f:
-            for dat in trainingSet:
-                f.write("{}\n{}\n".format(dat[0], dat[1]))
+        trainingSamples += process(dataFile)
+
+    with open(outfile, 'w') as f:
+        f.write("{} {} {}\n".format(len(trainingSamples), (window*window), 1))
+        for dat in trainingSamples:
+            f.write("{}\n{}\n".format(dat[0], dat[1]))
 
     shutil.rmtree(rgbDir)
 
 def merge(large, small):
     tempData = []
     sampleIndices = random.sample(xrange(len(large)), len(small))
-    logging.debug("Random indices: {}".format(sampleIndices))
     tempData = [large[i] for i in sampleIndices]
     tempData += small
     random.shuffle(tempData)
@@ -121,12 +123,20 @@ def cli():
         default=".", help='image dataset directory'
     )
     parser.add_argument(
+        '-w', dest='window', action='store', type=int, required=False,
+        default=20, help='window size of the training data (default 20)'
+    )
+    parser.add_argument(
         '-d', dest='debug', action='store_true', required=False,
         default=False, help='print out debug messages'
     )
     parser.add_argument(
         '-log', dest='logpath', action='store', type=str, required=False,
         default=LOG_FILE, help='path to log file'
+    )
+    parser.add_argument(
+        '-out', dest='outfile', action='store', type=str, required=False,
+        default=DATA_FILE, help='path to output data file'
     )
     args = parser.parse_args()
 
@@ -149,7 +159,7 @@ def cli():
         rootLogger.setLevel(logging.INFO)
 
     if (os.path.isdir(args.imdir)):
-        crawl(args.imdir)
+        collect(args.imdir, args.outfile, args.window)
     else:
         print ("Error: Directory {} does not exist".format(args.imdir))
 
