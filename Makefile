@@ -17,4 +17,4 @@ detect: $(OBJS)
 
 
 clean:
-	rm -rf *.o detect *.pyc *.data detect.dSYM
+	rm -rf *.o detect *.pyc *.data detect.dSYM *.log
