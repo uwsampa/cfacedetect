@@ -34,29 +34,11 @@ def jpgToRgb(inPath, outPath):
             rgb.write("," + str(pix[x, y][0]) + "," + str(pix[x, y][1]) + "," + str(pix[x, y][2]))
         rgb.write("\n")
 
-def collect(imdir, outfile, window):
+def collect(imdir, outfile, window, size):
 
-    jpegs = []
-    for root, dirnames, filenames in os.walk(imdir):
-      for filename in fnmatch.filter(filenames, '*.jpg'):
-        jpegs.append(os.path.join(root, filename))
-    logging.info('Found {} images in {}'.format(len(jpegs), imdir))
-
-    rgbDir = tempfile.mkdtemp()+'/'
-    logging.debug('New directory created: {}'.format(rgbDir))
-
-    rgbs = []
-    for jpeg in jpegs:
-        fn = os.path.basename(jpeg)
-        rgb = rgbDir+os.path.splitext(fn)[0]+".rgb"
-        logging.debug('Converting {} to rgb format'.format(fn))
-        jpgToRgb(jpeg, rgb)
-        rgbs.append(rgb)
-
-    logging.info('Converted {} jpegs to rgb format'.format(len(rgbs)))
-    logging.info('Now compiling face detection program with window size set to {}'.format(window))
-
+    # First compile the program with appropriate flags turned on
     try:
+        shell(["make","clean"])
         defineStr = "DEFINES=\"-DDEFSIZE="+str(window)+"\""
         shell(["make", defineStr])
     except:
@@ -65,24 +47,50 @@ def collect(imdir, outfile, window):
 
     logging.info('Compiled face detection program successfully')
 
-    trainingSamples = []
-    for rgb in rgbs:
-        dataFile = rgbDir+os.path.splitext(os.path.basename(rgb))[0]
-        try:
-            logging.debug('Running face detection and data collection on {}'.format(dataFile))
-            shell(["./detect", rgb, dataFile])
-        except:
-            logging.error('Face detection on {} failed'.format(rgb))
-            exit()
+    # Collect input sources
+    jpegs = []
+    for root, dirnames, filenames in os.walk(imdir):
+      for filename in fnmatch.filter(filenames, '*.jpg'):
+        jpegs.append(os.path.join(root, filename))
+    logging.info('Found {} images in {}'.format(len(jpegs), imdir))
 
-        trainingSamples += process(dataFile)
+    # Temporary directory for temporary files
+    try:
+        rgbDir = tempfile.mkdtemp()+'/'
+        logging.debug('New directory created: {}'.format(rgbDir))
 
-    with open(outfile, 'w') as f:
-        f.write("{} {} {}\n".format(len(trainingSamples), (window*window), 1))
-        for dat in trainingSamples:
-            f.write("{}\n{}\n".format(dat[0], dat[1]))
+        trainingSamples = []
+        for jpeg in jpegs:
+            # Convert jpgs to rgbs
+            fn = os.path.basename(jpeg)
+            rgb = rgbDir+os.path.splitext(fn)[0]+".rgb"
+            logging.debug('Converting {} to rgb format'.format(fn))
+            jpgToRgb(jpeg, rgb)
+            logging.debug('Conversion successful: {}'.format(rgb))
 
-    shutil.rmtree(rgbDir)
+            # Now perform neural network training
+            dataFile = rgbDir+os.path.splitext(os.path.basename(rgb))[0]
+            try:
+                logging.debug('Running face detection and data collection on {}'.format(dataFile))
+                shell(["./detect", rgb, dataFile])
+            except:
+                logging.error('Face detection on {} failed'.format(rgb))
+                exit()
+            logging.debug('Face detection successful!')
+
+            trainingSamples += process(dataFile)
+            if len(trainingSamples) >= size:
+                break
+
+        trainingSamples = trainingSamples[0:size-1]
+
+        with open(outfile, 'w') as f:
+            f.write("{} {} {}\n".format(len(trainingSamples), (window*window), 1))
+            for dat in trainingSamples:
+                f.write("{}\n{}\n".format(dat[0], dat[1]))
+
+    finally:
+        shutil.rmtree(rgbDir)
 
 def merge(large, small):
     tempData = []
@@ -127,6 +135,10 @@ def cli():
         default=20, help='window size of the training data (default 20)'
     )
     parser.add_argument(
+        '-size', dest='size', action='store', type=int, required=False,
+        default=False, help='training input size'
+    )
+    parser.add_argument(
         '-d', dest='debug', action='store_true', required=False,
         default=False, help='print out debug messages'
     )
@@ -159,7 +171,7 @@ def cli():
         rootLogger.setLevel(logging.INFO)
 
     if (os.path.isdir(args.imdir)):
-        collect(args.imdir, args.outfile, args.window)
+        collect(args.imdir, args.outfile, args.window, args.size)
     else:
         print ("Error: Directory {} does not exist".format(args.imdir))
 
