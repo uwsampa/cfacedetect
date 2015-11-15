@@ -34,7 +34,7 @@ def jpgToRgb(inPath, outPath):
             rgb.write("," + str(pix[x, y][0]) + "," + str(pix[x, y][1]) + "," + str(pix[x, y][2]))
         rgb.write("\n")
 
-def collect(imdir, outfile, window, size):
+def collect(imdir, outfile, window, size, pRatio):
 
     # First compile the program with appropriate flags turned on
     try:
@@ -78,7 +78,7 @@ def collect(imdir, outfile, window, size):
                 exit()
             logging.debug('Face detection successful!')
 
-            trainingSamples += process(dataFile)
+            trainingSamples += process(dataFile, pRatio)
             if len(trainingSamples) >= size:
                 break
 
@@ -92,15 +92,28 @@ def collect(imdir, outfile, window, size):
     finally:
         shutil.rmtree(rgbDir)
 
-def merge(large, small):
-    tempData = []
-    sampleIndices = random.sample(xrange(len(large)), len(small))
-    tempData = [large[i] for i in sampleIndices]
-    tempData += small
-    random.shuffle(tempData)
-    return tempData
+def merge(pos, neg, pRatio):
 
-def process(dataFile):
+    mergedData = []
+
+    total = len(neg)+len(pos)
+    logging.debug('There are {} pos, {} neg, {} total'.format(len(pos), len(neg), total))
+    # Do we have enough positive samples
+    if len(pos) >= pRatio*total:
+        mergedData += neg
+        numPos = int(len(neg)/(1-pRatio)) - len(neg)
+        mergedData += pos[:numPos]
+        logging.debug('Using {} pos, {} neg samples'.format(numPos, len(neg), total))
+    else:
+        mergedData += pos
+        numNeg = int(len(pos)/pRatio) - len(pos)
+        mergedData += neg[:numNeg]
+        logging.debug('Using {} pos, {} neg samples'.format(len(pos), numNeg, total))
+
+    random.shuffle(mergedData)
+    return mergedData
+
+def process(dataFile, pRatio):
     pDataFile = dataFile+'.pos.data'
     nDataFile = dataFile+'.neg.data'
 
@@ -112,13 +125,12 @@ def process(dataFile):
             for line in f:
                 dataSet[1].append([line.strip(), dataSet[2]])
 
+    random.shuffle(pData)
+    random.shuffle(nData)
+
     logging.debug("Obtained {} positive samples, and {} negative samples".format(len(pData), len(nData)))
 
-    mergedData = []
-    if len(nData) > len(pData):
-        mergedData = merge(nData, pData)
-    else:
-        mergedData = merge(pData, nData)
+    mergedData = merge(pData, nData, pRatio)
 
     return mergedData
 
@@ -139,6 +151,10 @@ def cli():
         default=False, help='training input size'
     )
     parser.add_argument(
+        '-pRatio', dest='pRatio', action='store', type=float, required=False,
+        default=0.5, help='ratio of positive samples [0.0-1.0]'
+    )
+    parser.add_argument(
         '-d', dest='debug', action='store_true', required=False,
         default=False, help='print out debug messages'
     )
@@ -156,7 +172,6 @@ def cli():
     logFormatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s", datefmt='%m/%d/%Y %I:%M:%S %p')
     rootLogger = logging.getLogger()
 
-    open(args.logpath, 'a').close()
     fileHandler = logging.FileHandler(args.logpath)
     fileHandler.setFormatter(logFormatter)
     rootLogger.addHandler(fileHandler)
@@ -171,7 +186,7 @@ def cli():
         rootLogger.setLevel(logging.INFO)
 
     if (os.path.isdir(args.imdir)):
-        collect(args.imdir, args.outfile, args.window, args.size)
+        collect(args.imdir, args.outfile, args.window, args.size, args.pRatio)
     else:
         print ("Error: Directory {} does not exist".format(args.imdir))
 
