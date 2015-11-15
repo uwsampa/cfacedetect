@@ -50,17 +50,17 @@ RgbImage* shrink(RgbImage* pxls, int x, int y, int width, int height, int scaleW
                 for (k = fixedy; k < nxt_fixedy; k++) {
                     for (l = fixedx; l < nxt_fixedx; l++) {
                         #if SHRINK_MODE == 2 // average
-                            temp.r += pxls->pixels[fixedy+k][fixedx+l].r;
-                            temp.g += pxls->pixels[fixedy+k][fixedx+l].g;
-                            temp.b += pxls->pixels[fixedy+k][fixedx+l].b;
+                            temp.r += pxls->pixels[k][l].r;
+                            temp.g += pxls->pixels[k][l].g;
+                            temp.b += pxls->pixels[k][l].b;
                         #elif SHRINK_MODE == 3 // max
-                            temp.r = max(temp.r, pxls->pixels[fixedy+k][fixedx+l].r);
-                            temp.g = max(temp.g, pxls->pixels[fixedy+k][fixedx+l].g);
-                            temp.b = max(temp.b, pxls->pixels[fixedy+k][fixedx+l].b);
+                            temp.r = max(temp.r, pxls->pixels[k][l].r);
+                            temp.g = max(temp.g, pxls->pixels[k][l].g);
+                            temp.b = max(temp.b, pxls->pixels[k][l].b);
                         #elif SHRINK_MODE == 4 // min
-                            temp.r = min(temp.r, pxls->pixels[fixedy+k][fixedx+l].r);
-                            temp.g = min(temp.g, pxls->pixels[fixedy+k][fixedx+l].g);
-                            temp.b = min(temp.b, pxls->pixels[fixedy+k][fixedx+l].b);
+                            temp.r = min(temp.r, pxls->pixels[k][l].r);
+                            temp.g = min(temp.g, pxls->pixels[k][l].g);
+                            temp.b = min(temp.b, pxls->pixels[k][l].b);
                         #endif //SHRINK_MODE
                     }
                 }
