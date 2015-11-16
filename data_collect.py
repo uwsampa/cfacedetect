@@ -34,7 +34,7 @@ def jpgToRgb(inPath, outPath):
             rgb.write("," + str(pix[x, y][0]) + "," + str(pix[x, y][1]) + "," + str(pix[x, y][2]))
         rgb.write("\n")
 
-def collect(imdir, outfile, window, size, pRatio):
+def collect(imdir, outfile, window, size, pRatio, extensive=False):
 
     # First compile the program with appropriate flags turned on
     try:
@@ -79,10 +79,14 @@ def collect(imdir, outfile, window, size, pRatio):
             logging.debug('Face detection successful!')
 
             trainingSamples += process(dataFile, pRatio)
-            if len(trainingSamples) >= size:
-                break
+            if size and not extensive:
+                if len(trainingSamples) >= size:
+                    break
 
-        trainingSamples = trainingSamples[0:size-1]
+        random.shuffle(trainingSamples)
+
+        if (size):
+            trainingSamples = trainingSamples[0:size]
 
         with open(outfile, 'w') as f:
             f.write("{} {} {}\n".format(len(trainingSamples), (window*window), 1))
@@ -130,7 +134,10 @@ def process(dataFile, pRatio):
 
     logging.debug("Obtained {} positive samples, and {} negative samples".format(len(pData), len(nData)))
 
-    mergedData = merge(pData, nData, pRatio)
+    if pRatio==-1:
+        mergedData = pData+nData
+    else:
+        mergedData = merge(pData, nData, pRatio)
 
     return mergedData
 
@@ -148,11 +155,11 @@ def cli():
     )
     parser.add_argument(
         '-size', dest='size', action='store', type=int, required=False,
-        default=False, help='training input size'
+        default=None, help='data size'
     )
     parser.add_argument(
         '-pRatio', dest='pRatio', action='store', type=float, required=False,
-        default=0.5, help='ratio of positive samples [0.0-1.0]'
+        default=0.5, help='ratio of positive samples [0.0-1.0]; if set to -1 takes all samples'
     )
     parser.add_argument(
         '-d', dest='debug', action='store_true', required=False,
@@ -165,6 +172,10 @@ def cli():
     parser.add_argument(
         '-out', dest='outfile', action='store', type=str, required=False,
         default=DATA_FILE, help='path to output data file'
+    )
+    parser.add_argument(
+        '-extensive', dest='extensive', action='store_true', required=False,
+        default=False, help='process all files in dataset and pick random subset (extends runtime)'
     )
     args = parser.parse_args()
 
@@ -186,7 +197,7 @@ def cli():
         rootLogger.setLevel(logging.INFO)
 
     if (os.path.isdir(args.imdir)):
-        collect(args.imdir, args.outfile, args.window, args.size, args.pRatio)
+        collect(args.imdir, args.outfile, args.window, args.size, args.pRatio, args.extensive)
     else:
         print ("Error: Directory {} does not exist".format(args.imdir))
 
