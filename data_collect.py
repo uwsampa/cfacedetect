@@ -73,8 +73,8 @@ def process(dataFile, pRatio):
     logging.debug("Obtained {} positive samples, and {} negative samples".format(len(pData), len(nData)))
 
     if pRatio==-1:
-        # mergedData = pData+nData
-        mergedData = pData
+        mergedData = pData+nData
+        #mergedData = pData
     else:
         mergedData = merge(pData, nData, pRatio)
 
@@ -102,7 +102,7 @@ def collect(imdir, outfile, window, size, pRatio, extensive=False):
 
     # Temporary directory for temporary files
     try:
-        rgbDir = tempfile.mkdtemp()+'/'
+        rgbDir = './tmp/'
         logging.debug('New directory created: {}'.format(rgbDir))
 
         trainingSamples = []
@@ -118,9 +118,9 @@ def collect(imdir, outfile, window, size, pRatio, extensive=False):
             dataFile = rgbDir+os.path.splitext(os.path.basename(rgb))[0]
             try:
                 logging.debug('Running face detection and data collection on {}'.format(dataFile))
-                shell(["./detect2", rgb, dataFile])
+                shell(["./detect", rgb, dataFile])
             except:
-                print("./detect2 "+rgb+" "+dataFile)
+                print("./detect "+rgb+" "+dataFile)
                 pdb.set_trace()
                 logging.error('Face detection on {} failed'.format(rgb))
                 exit()
@@ -143,7 +143,7 @@ def collect(imdir, outfile, window, size, pRatio, extensive=False):
                 f.write("{}\n{}\n".format(dat[0], dat[1]))
 
     finally:
-        shutil.rmtree(rgbDir)
+        subprocess.check_output("rm tmp/*",shell=True)
 
 def cli():
     parser = argparse.ArgumentParser(
