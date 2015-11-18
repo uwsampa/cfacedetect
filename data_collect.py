@@ -12,6 +12,7 @@ import sys
 
 LOG_FILE = "data_collect.log"
 DATA_FILE = "out.data"
+OCV_CASCADE="xml/ocv_clsfr.xml"
 
 def shell(command, cwd=None, shell=False):
     return subprocess.check_output(
@@ -34,13 +35,12 @@ def jpgToRgb(inPath, outPath):
             rgb.write("," + str(pix[x, y][0]) + "," + str(pix[x, y][1]) + "," + str(pix[x, y][2]))
         rgb.write("\n")
 
-def compileExecutable(window, cascade="xml/ocv_clsfr.xml"):
+def compileExecutable(window):
     try:
         shell(["make","clean"])
         defineStr = "DEFINES=\"-DDEFSIZE="+str(window)
         defineStr += " -DCOMMON_DUMP"
         defineStr += " -DDRAW_PROB=1"
-        defineStr += " -DCASCADE="+cascade
         defineStr += "\""
         shell(["make", defineStr])
     except:
@@ -66,9 +66,18 @@ def test(path, outfile, window, testCascade):
         logging.error('Path invalid: {}'.format(path))
         exit()
 
+    # Stats
+    stats = {
+        "true_pos": 0,
+        "true_neg": 0,
+        "false_pos": 0,
+        "false_neg": 0,
+    }
+
     # Temporary directory for temporary files
     try:
-        rgbDir = tempfile.mkdtemp()+'/'
+        # rgbDir = tempfile.mkdtemp()+'/'
+        rgbDir = './'
         logging.debug('New directory created: {}'.format(rgbDir))
 
         trainingSamples = []
@@ -87,7 +96,7 @@ def test(path, outfile, window, testCascade):
             try:
                 compileExecutable(window)
                 logging.debug('Running face detection and data collection on {} with original cascade'.format(origFile))
-                shell(["./detect", rgb, origFile])
+                shell(["./detect", rgb, OCV_CASCADE, origFile])
             except:
                 logging.error('Face detection on {} failed'.format(rgb))
                 exit()
@@ -95,9 +104,9 @@ def test(path, outfile, window, testCascade):
             origData = process(origFile)
             # Collect test labels
             try:
-                compileExecutable(window, testCascade)
+                compileExecutable(window)
                 logging.debug('Running face detection and data collection on {} with test cascade {}'.format(testFile, testCascade))
-                shell(["./detect", rgb, testFile])
+                shell(["./detect", rgb, testCascade, testFile])
             except:
                 logging.error('Face detection on {} failed'.format(rgb))
                 exit()
@@ -110,20 +119,42 @@ def test(path, outfile, window, testCascade):
                 exit()
             # Positive Test Data with Orig Labels
             filterData = []
-
-            for idx, elem in enumerate(testData):
-                if (elem[0] != origData[idx][0]):
+            for idx, dat in enumerate(testData):
+                tst_data = dat[0]
+                ref_data = origData[idx][0]
+                tst_label = dat[1]
+                ref_label = origData[idx][1]
+                if (tst_data != ref_data):
                     logging.error('Test and Original data mismatch!')
-                    logging.error('Test Data: {}'.elem[0])
+                    logging.error('Test Data: {}'.dat[0])
                     logging.error('Orig Data: {}'.origData[idx][0])
                     exit()
-                if (elem[1] == str(1)):
-                    filterData.append([elem[0], origData[idx][1]])
+                # Update Stats
+                if (tst_label==str(1) and ref_label==str(1)):
+                    stats["true_pos"] += 1
+                if (tst_label==str(0) and ref_label==str(0)):
+                    stats["true_neg"] += 1
+                if (tst_label==str(1) and ref_label==str(0)):
+                    stats["false_pos"] += 1
+                if (tst_label==str(0) and ref_label==str(1)):
+                    stats["false_neg"] += 1
+
+                # Check label
+                if (tst_label == str(1)):
+                    filterData.append([tst_data, ref_label])
+
             trainingSamples+= filterData
 
             # Cleanup files
             os.remove(origFile)
             os.remove(testFile)
+
+        # Print stats
+        precision = float(stats["true_pos"])/(stats["true_pos"]+stats["false_pos"])
+        recall = float(stats["true_pos"])/(stats["true_pos"]+stats["false_neg"])
+        logging.info("Raw stats = {}".format(stats))
+        logging.info("Precision = {}".format(precision))
+        logging.info("Recall = {}".format(recall))
 
         with open(outfile, 'w') as f:
             f.write("{} {} {}\n".format(len(trainingSamples), (window*window), 1))
@@ -132,7 +163,6 @@ def test(path, outfile, window, testCascade):
 
     finally:
         shutil.rmtree(rgbDir)
-
 
 
 def collect(path, outfile, window, size, pRatio, extensive=False):
@@ -182,7 +212,7 @@ def collect(path, outfile, window, size, pRatio, extensive=False):
             testFile = rgbDir+os.path.splitext(os.path.basename(rgb))[0]
             try:
                 logging.debug('Running face detection and data collection on {}'.format(dataFile))
-                shell(["./detect", rgb, dataFile])
+                shell(["./detect", rgb, OCV_CASCADE,dataFile])
             except:
                 logging.error('Face detection on {} failed'.format(rgb))
                 exit()

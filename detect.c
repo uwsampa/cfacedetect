@@ -496,33 +496,30 @@ void detect(Cascade* classifier, char* filename) {
 }
 
 int main(int argc, char **argv) {
-	Cascade* classifier = loadCascade(CASCADE);
-
-	// srand(time(NULL));
 	srand(1);
 
-	if (classifier != NULL) {
+	#if DATA
+		if (argc != 4) {
+			printf("Usage: %s FILENAME CASCADE OUTPUT_FILE\n", argv[0]);
+		} else {
+			dataFileName = argv[3];
+			Cascade* classifier = loadCascade(argv[2]);
+			if (classifier) {
+				detect(classifier, argv[1]);
+			}
+			freeCascade(classifier);
+		}
+	#else
+		if (argc != 3) {
+			printf("Usage: %s FILENAME CASCADE\n", argv[0]);
+			Cascade* classifier = loadCascade(argv[2]);
+			if (classifier) {
+				detect(classifier, argv[1]);
+			}
+			freeCascade(classifier);
+		}
+	#endif
 
-		#if DATA
-			if (argc != 3) {
-				printf("Running with default arguments.\n");
-				printf("Usage: %s FILENAME OUTPUT_FILE\n", argv[0]);
-				detect(classifier, INPIC);
-			} else {
-				dataFileName = argv[2];
-				detect(classifier, argv[1]);
-			}
-		#else
-			if (argc != 2) {
-				printf("Running with default arguments.\n");
-				printf("Usage: %s FILENAME\n", argv[0]);
-				detect(classifier, INPIC);
-			} else {
-				detect(classifier, argv[1]);
-			}
-		#endif
-		freeCascade(classifier);
-	}
 	return 0;
 
 }
