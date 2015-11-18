@@ -7,7 +7,7 @@
 #include <time.h>
 #include <assert.h>
 #include "face.h"
-#include "floatfann.h"
+// #include "floatfann.h"
 #include "parse.h"
 #include "rgb_image.h"
 #include "shrink.h"
@@ -33,7 +33,7 @@
 #define MERGE true
 
 ///Turns on debugging information
-#define DEBUG false
+#define DEBUG true
 
 /// Turns on data collection
 #define DATA true
@@ -47,7 +47,7 @@
 #define DATA_FN "train"
 
 /// HAAR cascade file path
-#define CASCADE "xml/ocv_clsfr.xml"
+#define CASCADE "xml/22x100.xml"
 
 /// Input picture file path (when no input image specified)
 #define INPIC "albert.rgb"
@@ -304,10 +304,10 @@ void detectSingleScale(RgbImage* pxls, RgbImage* integral, RgbImage* integralsq,
 
 				if (stagePassThresh < classifier->stages[i].threshold) {
 					#if DATA
-						int r = rand() % DRAW_PROB;
-						if (r == DRAW_PROB-1) {
+						// int r = rand() % DRAW_PROB;
+						// if (r == DRAW_PROB-1) {
 							printPix(result, fp_neg);
-						}
+						// }
 					#endif
 					break;
 				}
@@ -341,43 +341,43 @@ void detectSingleScale(RgbImage* pxls, RgbImage* integral, RgbImage* integralsq,
   * @param[in] pxls input RgbImage
   * @param[in] window window size scanning the image
   */
-void approxDetectSingleScale(struct fann *ann, RgbImage* pxls, int window) {
-	int width = pxls->w;
-	int height = pxls->h;
+// void approxDetectSingleScale(struct fann *ann, RgbImage* pxls, int window) {
+// 	int width = pxls->w;
+// 	int height = pxls->h;
 
-	fann_type input[DEFSIZE * DEFSIZE];
-	float *calc_out;
-	int s;
+// 	fann_type input[DEFSIZE * DEFSIZE];
+// 	float *calc_out;
+// 	int s;
 
-	int y, x;
-	for (y = 0; y < height - window; y++) {
-		for (x = 0; x < width - window; x++) {
-			RgbImage* result = shrink(pxls, x, y, window, window, DEFSIZE, DEFSIZE);
+// 	int y, x;
+// 	for (y = 0; y < height - window; y++) {
+// 		for (x = 0; x < width - window; x++) {
+// 			RgbImage* result = shrink(pxls, x, y, window, window, DEFSIZE, DEFSIZE);
 
-			if(result == NULL) {
-				return;
-			}
+// 			if(result == NULL) {
+// 				return;
+// 			}
 
-			int i;
+// 			int i;
 
-			for(i = 0; i < DEFSIZE * DEFSIZE; i++) {
-				input[i] = result->pixels[i / DEFSIZE][i % DEFSIZE].r / 255.0;
-			}
+// 			for(i = 0; i < DEFSIZE * DEFSIZE; i++) {
+// 				input[i] = result->pixels[i / DEFSIZE][i % DEFSIZE].r / 255.0;
+// 			}
 
-			calc_out = fann_run(ann, input);
+// 			calc_out = fann_run(ann, input);
 
-			s = calc_out[0] > 0.5 ? 1 : 0;
+// 			s = calc_out[0] > 0.5 ? 1 : 0;
 
-			if(s == 1) {
-				head = push(head, window, x, y);
-			} else {
-				break;
-			}
+// 			if(s == 1) {
+// 				head = push(head, window, x, y);
+// 			} else {
+// 				break;
+// 			}
 
-			freeRgbImage(result);
-		}
-	}
-}
+// 			freeRgbImage(result);
+// 		}
+// 	}
+// }
 
 /** Initiating detectSingleScale/approxDetectSingleScale with
   * increased window size and scaled features scanning through
@@ -391,17 +391,17 @@ void detectMultiScale(RgbImage* pxls, Cascade* classifier) {
 
 	#if VERSION == 0
 
-		#if APPROX
-			struct fann *ann;
-			printf("Approximating.\n");
-			ann = fann_create_from_file(NN);
-		#else
+		// #if APPROX
+		// 	struct fann *ann;
+		// 	printf("Approximating.\n");
+		// 	ann = fann_create_from_file(NN);
+		// #else
 			RgbImage* integral = integralImage(pxls, 0);
 			RgbImage* integralsq = integralImage(pxls, 1);
 			if(integral == NULL || integralsq == NULL) {
 				return;
 			}
-		#endif
+		// #endif
 
 		float scale = 1.0;
 
@@ -409,19 +409,19 @@ void detectMultiScale(RgbImage* pxls, Cascade* classifier) {
 			window = window * SCALE_FACTOR;
 			scale = scale * SCALE_FACTOR;
 
-			#if APPROX
-				approxDetectSingleScale(ann, pxls, (int)window);
-			#else
+			// #if APPROX
+			// 	approxDetectSingleScale(ann, pxls, (int)window);
+			// #else
 				detectSingleScale(pxls, integral, integralsq, classifier, (int)window, scale);
-			#endif
+			// #endif
 		}
 
-		#if APPROX
-			fann_destroy(ann);
-		#else
+		// #if APPROX
+		// 	fann_destroy(ann);
+		// #else
 			freeRgbImage(integral);
 			freeRgbImage(integralsq);
-		#endif
+		// #endif
 
 	#elif VERSION == 1
 		int shrinkWidth = pxls->w;

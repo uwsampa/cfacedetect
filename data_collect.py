@@ -7,7 +7,7 @@ import argparse
 import logging
 import fnmatch
 from PIL import Image
-import sys
+import sys, pdb
 
 
 LOG_FILE = "data_collect.log"
@@ -34,16 +34,62 @@ def jpgToRgb(inPath, outPath):
             rgb.write("," + str(pix[x, y][0]) + "," + str(pix[x, y][1]) + "," + str(pix[x, y][2]))
         rgb.write("\n")
 
+def merge(pos, neg, pRatio):
+
+    mergedData = []
+
+    total = len(neg)+len(pos)
+    logging.debug('There are {} pos, {} neg, {} total'.format(len(pos), len(neg), total))
+    # Do we have enough positive samples
+    if len(pos) >= pRatio*total:
+        mergedData += neg
+        numPos = int(len(neg)/(1-pRatio)) - len(neg)
+        mergedData += pos[:numPos]
+        logging.debug('Using {} pos, {} neg samples'.format(numPos, len(neg), total))
+    else:
+        mergedData += pos
+        numNeg = int(len(pos)/pRatio) - len(pos)
+        mergedData += neg[:numNeg]
+        logging.debug('Using {} pos, {} neg samples'.format(len(pos), numNeg, total))
+
+    # random.shuffle(mergedData)
+    return mergedData
+
+def process(dataFile, pRatio):
+    pDataFile = dataFile+'.pos.data'
+    nDataFile = dataFile+'.neg.data'
+
+    pData = []
+    nData = []
+
+    for dataSet in [[pDataFile, pData, 1], [nDataFile, nData, 0]]:
+        with open(dataSet[0]) as f:
+            for line in f:
+                dataSet[1].append([line.strip(), dataSet[2]])
+
+    # random.shuffle(pData)
+    # random.shuffle(nData)
+
+    logging.debug("Obtained {} positive samples, and {} negative samples".format(len(pData), len(nData)))
+
+    if pRatio==-1:
+        # mergedData = pData+nData
+        mergedData = pData
+    else:
+        mergedData = merge(pData, nData, pRatio)
+
+    return mergedData
+
 def collect(imdir, outfile, window, size, pRatio, extensive=False):
 
     # First compile the program with appropriate flags turned on
-    try:
-        shell(["make","clean"])
-        defineStr = "DEFINES=\"-DDEFSIZE="+str(window)+"\""
-        shell(["make", defineStr])
-    except:
-        logging.error('Compiling face detection program failed')
-        exit()
+    # try:
+    #     shell(["make","clean"])
+    #     defineStr = "DEFINES=\"-DDEFSIZE="+str(window)+"\""
+    #     shell(["make", defineStr])
+    # except:
+    #     logging.error('Compiling face detection program failed')
+    #     exit()
 
     logging.info('Compiled face detection program successfully')
 
@@ -72,8 +118,10 @@ def collect(imdir, outfile, window, size, pRatio, extensive=False):
             dataFile = rgbDir+os.path.splitext(os.path.basename(rgb))[0]
             try:
                 logging.debug('Running face detection and data collection on {}'.format(dataFile))
-                shell(["./detect", rgb, dataFile])
+                shell(["./detect2", rgb, dataFile])
             except:
+                print("./detect2 "+rgb+" "+dataFile)
+                pdb.set_trace()
                 logging.error('Face detection on {} failed'.format(rgb))
                 exit()
             logging.debug('Face detection successful!')
@@ -83,63 +131,19 @@ def collect(imdir, outfile, window, size, pRatio, extensive=False):
                 if len(trainingSamples) >= size:
                     break
 
-        random.shuffle(trainingSamples)
+        # random.shuffle(trainingSamples)
 
         if (size):
             trainingSamples = trainingSamples[0:size]
 
         with open(outfile, 'w') as f:
+
             f.write("{} {} {}\n".format(len(trainingSamples), (window*window), 1))
             for dat in trainingSamples:
                 f.write("{}\n{}\n".format(dat[0], dat[1]))
 
     finally:
         shutil.rmtree(rgbDir)
-
-def merge(pos, neg, pRatio):
-
-    mergedData = []
-
-    total = len(neg)+len(pos)
-    logging.debug('There are {} pos, {} neg, {} total'.format(len(pos), len(neg), total))
-    # Do we have enough positive samples
-    if len(pos) >= pRatio*total:
-        mergedData += neg
-        numPos = int(len(neg)/(1-pRatio)) - len(neg)
-        mergedData += pos[:numPos]
-        logging.debug('Using {} pos, {} neg samples'.format(numPos, len(neg), total))
-    else:
-        mergedData += pos
-        numNeg = int(len(pos)/pRatio) - len(pos)
-        mergedData += neg[:numNeg]
-        logging.debug('Using {} pos, {} neg samples'.format(len(pos), numNeg, total))
-
-    random.shuffle(mergedData)
-    return mergedData
-
-def process(dataFile, pRatio):
-    pDataFile = dataFile+'.pos.data'
-    nDataFile = dataFile+'.neg.data'
-
-    pData = []
-    nData = []
-
-    for dataSet in [[pDataFile, pData, 1], [nDataFile, nData, 0]]:
-        with open(dataSet[0]) as f:
-            for line in f:
-                dataSet[1].append([line.strip(), dataSet[2]])
-
-    random.shuffle(pData)
-    random.shuffle(nData)
-
-    logging.debug("Obtained {} positive samples, and {} negative samples".format(len(pData), len(nData)))
-
-    if pRatio==-1:
-        mergedData = pData+nData
-    else:
-        mergedData = merge(pData, nData, pRatio)
-
-    return mergedData
 
 def cli():
     parser = argparse.ArgumentParser(
