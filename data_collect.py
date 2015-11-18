@@ -34,9 +34,107 @@ def jpgToRgb(inPath, outPath):
             rgb.write("," + str(pix[x, y][0]) + "," + str(pix[x, y][1]) + "," + str(pix[x, y][2]))
         rgb.write("\n")
 
-def collect(imdir, outfile, window, size, pRatio, extensive=False):
+def compileExecutable(window, cascade="xml/ocv_clsfr.xml"):
+    try:
+        shell(["make","clean"])
+        defineStr = "DEFINES=\"-DDEFSIZE="+str(window)
+        defineStr += " -DCOMMON_DUMP"
+        defineStr += " -DDRAW_PROB=1"
+        defineStr += " -DCASCADE="+cascade
+        defineStr += "\""
+        shell(["make", defineStr])
+    except:
+        logging.error('Compiling face detection program failed')
+        exit()
 
-    # First compile the program with appropriate flags turned on
+def test(path, outfile, window, testCascade):
+
+    # Collect input sources
+    jpegs = []
+    if (os.path.isfile(path)):
+        # If it's a file
+        jpegs.append(path)
+        logging.info('Added image {}'.format(path))
+    elif (os.path.isdir(path)):
+        # If it's a directory
+        for root, dirnames, filenames in os.walk(path):
+          for filename in fnmatch.filter(filenames, '*.jpg'):
+            jpegs.append(os.path.join(root, filename))
+        logging.info('Found {} images in {}'.format(len(jpegs), path))
+    else:
+        # Path invalid
+        logging.error('Path invalid: {}'.format(path))
+        exit()
+
+    # Temporary directory for temporary files
+    try:
+        # rgbDir = tempfile.mkdtemp()+'/'
+        rgbDir = './'
+        logging.debug('New directory created: {}'.format(rgbDir))
+
+        trainingSamples = []
+        for jpeg in jpegs:
+            # Convert jpgs to rgbs
+            fn = os.path.basename(jpeg)
+            rgb = rgbDir+os.path.splitext(fn)[0]+".rgb"
+            logging.debug('Converting {} to rgb format'.format(fn))
+            jpgToRgb(jpeg, rgb)
+            logging.debug('Conversion successful: {}'.format(rgb))
+
+            # Now perform data collection on both cascades:
+            origFile = rgbDir+os.path.splitext(os.path.basename(rgb))[0]+'_orig'
+            testFile = rgbDir+os.path.splitext(os.path.basename(rgb))[0]+'_test'
+            # Collect original labels
+            try:
+                compileExecutable(window)
+                logging.debug('Running face detection and data collection on {} with original cascade'.format(origFile))
+                shell(["./detect", rgb, origFile])
+            except:
+                logging.error('Face detection on {} failed'.format(rgb))
+                exit()
+            logging.debug('Face detection successful!')
+            origData = process(origFile)
+            # Collect test labels
+            try:
+                compileExecutable(window, testCascade)
+                logging.debug('Running face detection and data collection on {} with test cascade {}'.format(testFile, testCascade))
+                shell(["./detect", rgb, testFile])
+            except:
+                logging.error('Face detection on {} failed'.format(rgb))
+                exit()
+            logging.debug('Face detection successful!')
+            testData = process(testFile)
+
+            # Perform Data merger:
+            if (len(testData)!=len(origData)):
+                logging.error('Test and Original data length mismatch!')
+                exit()
+            # Positive Test Data with Orig Labels
+            filterData = []
+
+            for idx, elem in enumerate(testData):
+                if (elem[0] != origData[idx][0]):
+                    logging.error('Test and Original data mismatch!')
+                    logging.error('Test Data: {}'.elem[0])
+                    logging.error('Orig Data: {}'.origData[idx][0])
+                    exit()
+                if (elem[1] == str(1)):
+                    filterData.append([elem[0], origData[idx][1]])
+            trainingSamples+= filterData
+
+        with open(outfile, 'w') as f:
+            f.write("{} {} {}\n".format(len(trainingSamples), (window*window), 1))
+            for dat in trainingSamples:
+                f.write("{}\n{}\n".format(dat[0], dat[1]))
+
+    finally:
+        # shutil.rmtree(rgbDir)
+        logging.error('Okay')
+
+
+
+def collect(path, outfile, window, size, pRatio, extensive=False):
+
     try:
         shell(["make","clean"])
         defineStr = "DEFINES=\"-DDEFSIZE="+str(window)+"\""
@@ -49,10 +147,20 @@ def collect(imdir, outfile, window, size, pRatio, extensive=False):
 
     # Collect input sources
     jpegs = []
-    for root, dirnames, filenames in os.walk(imdir):
-      for filename in fnmatch.filter(filenames, '*.jpg'):
-        jpegs.append(os.path.join(root, filename))
-    logging.info('Found {} images in {}'.format(len(jpegs), imdir))
+    if (os.path.isfile(path)):
+        # If it's a file
+        jpegs.append(path)
+        logging.info('Added image {}'.format(path))
+    elif (os.path.isdir(path)):
+        # If it's a directory
+        for root, dirnames, filenames in os.walk(path):
+          for filename in fnmatch.filter(filenames, '*.jpg'):
+            jpegs.append(os.path.join(root, filename))
+        logging.info('Found {} images in {}'.format(len(jpegs), path))
+    else:
+        # Path invalid
+        logging.error('Path invalid: {}'.format(path))
+        exit()
 
     # Temporary directory for temporary files
     try:
@@ -69,7 +177,7 @@ def collect(imdir, outfile, window, size, pRatio, extensive=False):
             logging.debug('Conversion successful: {}'.format(rgb))
 
             # Now perform neural network training
-            dataFile = rgbDir+os.path.splitext(os.path.basename(rgb))[0]
+            testFile = rgbDir+os.path.splitext(os.path.basename(rgb))[0]
             try:
                 logging.debug('Running face detection and data collection on {}'.format(dataFile))
                 shell(["./detect", rgb, dataFile])
@@ -117,36 +225,47 @@ def merge(pos, neg, pRatio):
     random.shuffle(mergedData)
     return mergedData
 
-def process(dataFile, pRatio):
-    pDataFile = dataFile+'.pos.data'
-    nDataFile = dataFile+'.neg.data'
-
-    pData = []
-    nData = []
-
-    for dataSet in [[pDataFile, pData, 1], [nDataFile, nData, 0]]:
-        with open(dataSet[0]) as f:
-            for line in f:
-                dataSet[1].append([line.strip(), dataSet[2]])
-
-    random.shuffle(pData)
-    random.shuffle(nData)
-
-    logging.debug("Obtained {} positive samples, and {} negative samples".format(len(pData), len(nData)))
-
-    if pRatio==-1:
-        mergedData = pData+nData
+def process(dataFile, pRatio=None):
+    if pRatio==None:
+        dataFile = dataFile
+        data = []
+        with open(dataFile) as f:
+            while True:
+                inputLine = f.readline()
+                outputLine = f.readline()
+                if not outputLine: break #EOF
+                data.append([inputLine.strip(), outputLine.strip()])
+        return data
     else:
-        mergedData = merge(pData, nData, pRatio)
+        pDataFile = dataFile+'.pos.data'
+        nDataFile = dataFile+'.neg.data'
 
-    return mergedData
+        pData = []
+        nData = []
+
+        for dataSet in [[pDataFile, pData, 1], [nDataFile, nData, 0]]:
+            with open(dataSet[0]) as f:
+                for line in f:
+                    dataSet[1].append([line.strip(), dataSet[2]])
+
+        random.shuffle(pData)
+        random.shuffle(nData)
+
+        logging.debug("Obtained {} positive samples, and {} negative samples".format(len(pData), len(nData)))
+
+        if pRatio==-1:
+            mergedData = pData+nData
+        else:
+            mergedData = merge(pData, nData, pRatio)
+
+        return mergedData
 
 def cli():
     parser = argparse.ArgumentParser(
         description='Face detection training data collection script'
     )
     parser.add_argument(
-        '-dir', dest='imdir', action='store', type=str, required=False,
+        '-path', dest='imdir', action='store', type=str, required=False,
         default=".", help='image dataset directory'
     )
     parser.add_argument(
@@ -177,6 +296,10 @@ def cli():
         '-extensive', dest='extensive', action='store_true', required=False,
         default=False, help='process all files in dataset and pick random subset (extends runtime)'
     )
+    parser.add_argument(
+        '-testCascade', dest='testCascade', action='store', required=False,
+        default=None, help='path to cascade to test'
+    )
     args = parser.parse_args()
 
     # Take care of log formatting
@@ -196,10 +319,11 @@ def cli():
     else:
         rootLogger.setLevel(logging.INFO)
 
-    if (os.path.isdir(args.imdir)):
-        collect(args.imdir, args.outfile, args.window, args.size, args.pRatio, args.extensive)
+    if (args.testCascade!=None):
+        test(args.imdir, args.outfile, args.window, args.testCascade)
     else:
-        print ("Error: Directory {} does not exist".format(args.imdir))
+        collect(args.imdir, args.outfile, args.window, args.size, args.pRatio, args.extensive)
+
 
 if __name__ == '__main__':
     cli()

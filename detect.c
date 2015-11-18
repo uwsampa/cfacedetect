@@ -67,6 +67,9 @@
 /// Window step size along X
 #define X_STEP_SIZE 1 /// window step size along X step
 
+///Common output file
+#define COMMON_DUMP false
+
 /// head of list of faces found
 Face* head = NULL;
 
@@ -82,7 +85,7 @@ char * dataFileName = DATA_FN;
   * @param[in][in] result window of pixels
   * @param[in][in] num whether it is a face or not
   */
-void printPix(RgbImage* result, FILE* fp) {
+void printPix(RgbImage* result, FILE* fp, int label) {
 
 	int i, j;
 
@@ -92,6 +95,9 @@ void printPix(RgbImage* result, FILE* fp) {
 		}
 	}
 	fprintf(fp, "\n");
+	if (label!=-1) {
+		fprintf(fp, "%d\n", label);
+	}
 }
 
 
@@ -234,17 +240,21 @@ void detectSingleScale(RgbImage* pxls, RgbImage* integral, RgbImage* integralsq,
 	int area = window * window;
 	int y, x;
 
+#ifdef COMMON_DUMP
+	FILE* fp_all = fopen(dataFileName, "a");
+	assert(fp_all && "Could not open data file!");
+#else
 	char filePath_pos[256];
 	char filePath_neg[256];
 	strcpy(filePath_pos, dataFileName);
 	strcpy(filePath_neg, dataFileName);
 	strcat(filePath_pos, ".pos.data");
 	strcat(filePath_neg, ".neg.data");
-
 	FILE* fp_pos = fopen(filePath_pos, "a");
 	FILE* fp_neg = fopen(filePath_neg, "a");
-
 	assert(fp_neg && fp_pos && "Could not open data files!");
+#endif //COMMON_DUMP
+
 
 	int y_step_size, x_step_size;
 	#if VERSION == 0
@@ -305,16 +315,24 @@ void detectSingleScale(RgbImage* pxls, RgbImage* integral, RgbImage* integralsq,
 				if (stagePassThresh < classifier->stages[i].threshold) {
 					#if DATA
 						int r = rand() % DRAW_PROB;
-						if (r == DRAW_PROB-1) {
-							printPix(result, fp_neg);
+						if (DRAW_PROB==1 || r == DRAW_PROB-1) {
+							#ifdef COMMON_DUMP
+								printPix(result, fp_all, 0);
+							#else
+								printPix(result, fp_neg, -1);
+							#endif //COMMON_DUMP
 						}
-					#endif
+					#endif //DATA
 					break;
 				}
 
 				if ( i + 1 == classifier->stgNum) {
 					#if DATA
-						printPix(result, fp_pos);
+						#ifdef COMMON_DUMP
+							printPix(result, fp_all, 1);
+						#else
+							printPix(result, fp_pos, -1);
+						#endif //COMMON_DUMP
 					#endif
 					#if VERSION == 0
 						head = push(head, window, x, y);
@@ -331,9 +349,12 @@ void detectSingleScale(RgbImage* pxls, RgbImage* integral, RgbImage* integralsq,
 		}
 	}
 
-
-	fclose(fp_pos);
-	fclose(fp_neg);
+	#ifdef COMMON_DUMP
+		fclose(fp_all);
+	#else
+		fclose(fp_pos);
+		fclose(fp_neg);
+	#endif
 }
 
 /** Using FANN approximate detectSingleScale
