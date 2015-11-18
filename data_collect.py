@@ -68,8 +68,7 @@ def test(path, outfile, window, testCascade):
 
     # Temporary directory for temporary files
     try:
-        # rgbDir = tempfile.mkdtemp()+'/'
-        rgbDir = './'
+        rgbDir = tempfile.mkdtemp()+'/'
         logging.debug('New directory created: {}'.format(rgbDir))
 
         trainingSamples = []
@@ -122,14 +121,17 @@ def test(path, outfile, window, testCascade):
                     filterData.append([elem[0], origData[idx][1]])
             trainingSamples+= filterData
 
+            # Cleanup files
+            os.remove(origFile)
+            os.remove(testFile)
+
         with open(outfile, 'w') as f:
             f.write("{} {} {}\n".format(len(trainingSamples), (window*window), 1))
             for dat in trainingSamples:
                 f.write("{}\n{}\n".format(dat[0], dat[1]))
 
     finally:
-        # shutil.rmtree(rgbDir)
-        logging.error('Okay')
+        shutil.rmtree(rgbDir)
 
 
 
