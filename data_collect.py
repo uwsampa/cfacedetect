@@ -76,8 +76,7 @@ def test(path, outfile, window, testCascade):
 
     # Temporary directory for temporary files
     try:
-        # rgbDir = tempfile.mkdtemp()+'/'
-        rgbDir = './'
+        rgbDir = tempfile.mkdtemp()+'/'
         logging.debug('New directory created: {}'.format(rgbDir))
 
         trainingSamples = []
