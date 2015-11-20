@@ -76,12 +76,23 @@ Face* deleteNext(Face* node) {
 /** Prints all the faces from the linked list starting from head
   * and free them accordingly
   * @param head the head of list
+  * @param fp file pointer (can be null)
   */
-void printfree(Face* head) {
-	while(head != NULL) {
-		printf("[%d, %d, %d] | ", head->window, head->x, head->y);
-		Face* temp = head;
-		head = head->next;
-		free(temp);
-	}
+void printfree(Face* head, FILE* fp) {
+    if(fp) {
+        while(head != NULL) {
+            fprintf(fp, "%d %d %d %d\n", head->x, head->y, head->window, head->window);
+            Face* temp = head;
+            head = head->next;
+            free(temp);
+        }
+    } else {
+        while(head != NULL) {
+            printf("[%d, %d, %d] | ", head->window, head->x, head->y);
+            Face* temp = head;
+            head = head->next;
+            free(temp);
+        }
+    }
+
 }

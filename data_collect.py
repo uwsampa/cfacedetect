@@ -9,6 +9,7 @@ import fnmatch
 from PIL import Image
 import sys
 
+ERROR_MODE=3
 
 LOG_FILE = "data_collect.log"
 DATA_FILE = "out.data"
@@ -21,19 +22,6 @@ def shell(command, cwd=None, shell=False):
         stderr=subprocess.STDOUT,
         shell=shell,
     )
-
-# def jpgToRgb(inPath, outPath):
-#     jpg = Image.open(inPath)
-#     pix = jpg.load()
-#     rgb = open(outPath, "w")
-
-#     rgb.write(str(jpg.size[0]) + "," + str(jpg.size[1]) + "\n")
-
-#     for y in range(0, jpg.size[1]):
-#         rgb.write(str(pix[0, y][0]) + "," + str(pix[0, y][1]) + "," + str(pix[0, y][2]))
-#         for x in range(1, jpg.size[0]):
-#             rgb.write("," + str(pix[x, y][0]) + "," + str(pix[x, y][1]) + "," + str(pix[x, y][2]))
-#         rgb.write("\n")
 
 def jpgToRgb(inPath, outPath):
     jpg = Image.open(inPath)
@@ -54,9 +42,9 @@ def jpgToRgb(inPath, outPath):
                 rgb.write("," + str(pix[x, y][0]) + "," + str(pix[x, y][1]) + "," + str(pix[x, y][2]))
             rgb.write("\n")
 
-def compileExecutable(window):
+def compileExecutable(window, mode=ERROR_MODE):
     defineStr = "DEFINES=\"-DDEFSIZE="+str(window)
-    defineStr += " -DCOMMON_DUMP=1"
+    defineStr += " -DDATA_COLLECT_MODE="+str(mode)
     defineStr += " -DDRAW_PROB=1"
     defineStr += "\""
     print defineStr
@@ -94,6 +82,7 @@ def test(path, outfile, window, testClassifier):
     # Temporary directory for temporary files
     try:
         rgbDir = tempfile.mkdtemp()+'/'
+        # rgbDir = './'
         logging.debug('New directory created: {}'.format(rgbDir))
 
         trainingSamples = []
@@ -110,7 +99,6 @@ def test(path, outfile, window, testClassifier):
             testFile = rgbDir+os.path.splitext(os.path.basename(rgb))[0]+'_test'
             # Collect original labels
             try:
-                shell(["make", "clean"])
                 compileExecutable(window)
                 logging.debug('Running face detection and data collection on {} with original cascade'.format(origFile))
                 shell(["./detect", rgb, OCV_CASCADE, origFile])
@@ -118,10 +106,7 @@ def test(path, outfile, window, testClassifier):
                 logging.error('Face detection on {} failed'.format(rgb))
                 exit()
             logging.debug('Face detection successful!')
-            origData = process(origFile)
-            # Collect test labels
             try:
-                shell(["make", "clean"])
                 compileExecutable(window)
                 logging.debug('Running face detection and data collection on {} with test cascade {}'.format(testFile, testClassifier))
                 shell(["./detect", rgb, testClassifier, testFile])
@@ -129,39 +114,50 @@ def test(path, outfile, window, testClassifier):
                 logging.error('Face detection on {} failed'.format(rgb))
                 exit()
             logging.debug('Face detection successful!')
-            testData = process(testFile)
 
-            # Perform Data merger:
-            if (len(testData)!=len(origData)):
-                logging.error('Test and Original data length mismatch!')
-                exit()
-            # Positive Test Data with Orig Labels
-            filterData = []
-            for idx, dat in enumerate(testData):
-                tst_data = dat[0]
-                ref_data = origData[idx][0]
-                tst_label = dat[1]
-                ref_label = origData[idx][1]
-                if (tst_data != ref_data):
-                    logging.error('Test and Original data mismatch!')
-                    logging.error('Test Data: {}'.dat[0])
-                    logging.error('Orig Data: {}'.origData[idx][0])
+            if ERROR_MODE==3:
+                origFaces = processFaces(origFile)
+                testFaces = processFaces(testFile)
+                statistics = measureOverlap(origFaces, testFaces)
+                stats["true_pos"] += statistics["true_pos"]
+                stats["false_pos"] += statistics["false_pos"]
+                stats["false_neg"] += statistics["false_neg"]
+
+            if ERROR_MODE==1:
+                # Read in data files
+                origData = process(origFile)
+                testData = process(testFile)
+                # Perform Data merger:
+                if (len(testData)!=len(origData)):
+                    logging.error('Test and Original data length mismatch!')
                     exit()
-                # Update Stats
-                if (tst_label==str(1) and ref_label==str(1)):
-                    stats["true_pos"] += 1
-                if (tst_label==str(0) and ref_label==str(0)):
-                    stats["true_neg"] += 1
-                if (tst_label==str(1) and ref_label==str(0)):
-                    stats["false_pos"] += 1
-                if (tst_label==str(0) and ref_label==str(1)):
-                    stats["false_neg"] += 1
+                # Positive Test Data with Orig Labels
+                filterData = []
+                for idx, dat in enumerate(testData):
+                    tst_data = dat[0]
+                    ref_data = origData[idx][0]
+                    tst_label = dat[1]
+                    ref_label = origData[idx][1]
+                    if (tst_data != ref_data):
+                        logging.error('Test and Original data mismatch at index {}!'.format(idx))
+                        logging.error('Test Data: {}'.format(tst_data))
+                        logging.error('Orig Data: {}'.format(ref_data))
+                        exit()
+                    # Update Stats
+                    if (tst_label==str(1) and ref_label==str(1)):
+                        stats["true_pos"] += 1
+                    if (tst_label==str(0) and ref_label==str(0)):
+                        stats["true_neg"] += 1
+                    if (tst_label==str(1) and ref_label==str(0)):
+                        stats["false_pos"] += 1
+                    if (tst_label==str(0) and ref_label==str(1)):
+                        stats["false_neg"] += 1
 
-                # Check label
-                if (tst_label == str(1)):
-                    filterData.append([tst_data, ref_label])
+                    # Check label
+                    if (tst_label == str(1)):
+                        filterData.append([tst_data, ref_label])
 
-            trainingSamples+= filterData
+                trainingSamples+= filterData
 
             # Cleanup files
             os.remove(origFile)
@@ -280,6 +276,65 @@ def merge(pos, neg, pRatio):
 
     random.shuffle(mergedData)
     return mergedData
+
+def processFaces(dataFile):
+    faces = []
+    with open(dataFile) as f:
+        for line in f:
+            faces.append([int(x) for x in line.strip().split(" ")])
+    return faces
+
+def overlap(face1, face2):
+    r1x1 = face1[0]
+    r1y1 = face1[1]
+    r1x2 = face1[2] + face1[0]
+    r1y2 = face1[3] + face1[1]
+    r2x1 = face2[0]
+    r2y1 = face2[1]
+    r2x2 = face2[2] + face2[0]
+    r2y2 = face2[3] + face2[1]
+
+    intersection = max(0, min(r1x2, r2x2) - max(r1x1, r2x1)) * max(0, min(r1y2, r2y2) - max(r1y1, r1y1))
+    union = face1[2]*face1[3] + face2[2]*face2[3] - intersection
+    result = float(intersection)/float(union)
+
+    return result
+
+def measureOverlap(origFaces, testFaces):
+    logging.info("Found {} faces with reference classifier!".format(len(origFaces)))
+    logging.info("Found {} faces with test classifier!".format(len(testFaces)))
+    logging.debug("Raw reference face data: {}!".format(origFaces))
+    logging.debug("Raw test face data: {}!".format(testFaces))
+
+    faces_to_find = 0
+    truePos = 0
+
+    remove_face = False
+    for origFace in origFaces:
+        faces_to_find = faces_to_find + 1
+        for testFace in testFaces:
+            score = overlap(origFace,testFace)
+            if score > .5:
+                truePos = truePos + 1
+                testFaces.remove(testFace)
+                logging.debug("Found face!")
+                logging.debug("Orig: {}".format(origFace))
+                logging.debug("Test: {}".format(testFace))
+                logging.debug("Overlap score: {}".format(score))
+                break
+
+    # Collect Statistics
+    falsePos = len(testFaces)
+    falseNeg = len(origFaces)-truePos
+
+    # Compute Precision and Recall
+    if len(origFaces)>0:
+        recall = (float) (truePos) / len(origFaces)
+        precision = (float) (truePos) / (truePos + falsePos)
+        logging.debug("Precision = {}".format(precision))
+        logging.debug("Recall = {}".format(recall))
+
+    return {"true_pos": truePos, "false_pos": falsePos, "false_neg": falseNeg}
 
 def process(dataFile, pRatio=None):
     if pRatio==None:

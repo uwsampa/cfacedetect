@@ -22,7 +22,7 @@
   * false: Adaptive step disabled (ver. 0 only)
   * true: Adaptive step enabled (ver. 0 only)
   */
-#define ADAPTIVE_STEP true
+#define ADAPTIVE_STEP false
 
 /// Turns on merging when collecting results
 #define MERGE false
@@ -31,8 +31,11 @@
 #define DEBUG false
 
 /// Turns on data collection
-#define DATA true
-#define COMMON_DUMP 1
+/// 0: no data collection
+/// 1: window collection, all
+/// 2: window collection, pos/neg
+/// 3: face collection
+#define DATA_COLLECT_MODE 3
 
 // Inverse probability of recording a
 // negative sample (balances-out the
@@ -65,6 +68,9 @@ int count = 0;
 
 /// name of the data file name
 char * dataFileName = DATA_FN;
+
+/// global invocation count
+int invocCount = 0;
 
 /** This function dumps a window of pixels
   * to a specified file for data collection
@@ -227,10 +233,12 @@ void detectSingleScale(RgbImage* pxls, RgbImage* integral, RgbImage* integralsq,
 	int area = window * window;
 	int y, x;
 
-#if COMMON_DUMP==1
+	printf("window=%d width=%d height=%d invocs=%d\n", window, width, height, invocCount);
+
+#if DATA_COLLECT_MODE==1 || DATA_COLLECT_MODE==3
 	FILE* fp_all = fopen(dataFileName, "a");
 	assert(fp_all && "Could not open data file!");
-#else
+#elif DATA_COLLECT_MODE==2
 	char filePath_pos[256];
 	char filePath_neg[256];
 	strcpy(filePath_pos, dataFileName);
@@ -240,14 +248,14 @@ void detectSingleScale(RgbImage* pxls, RgbImage* integral, RgbImage* integralsq,
 	FILE* fp_pos = fopen(filePath_pos, "a");
 	FILE* fp_neg = fopen(filePath_neg, "a");
 	assert(fp_neg && fp_pos && "Could not open data files!");
-#endif //COMMON_DUMP
+#endif //DATA_COLLECT_MODE
 
 
 	int y_step_size, x_step_size;
 	#if VERSION == 0
 		#if ADAPTIVE_STEP
-			y_step_size = (int) (window*Y_STEP_SIZE*0.05);
-			x_step_size = (int) (window*X_STEP_SIZE*0.05);
+			y_step_size = (int) (window*(float)Y_STEP_SIZE/DEFSIZE);
+			x_step_size = (int) (window*(float)X_STEP_SIZE/DEFSIZE);
 		#else
 			y_step_size = Y_STEP_SIZE;
 			x_step_size = X_STEP_SIZE;
@@ -259,12 +267,10 @@ void detectSingleScale(RgbImage* pxls, RgbImage* integral, RgbImage* integralsq,
 
 	//slide the window along the y axis by Y_STEP_SIZE
 	for (y = 0; y < height - window; y += y_step_size) {
-		// printf("\ty=%d\n", y);
 		//slide the window along the x axis by X_STEP_SIZE
 		for (x = 0; x < width - window; x += x_step_size) {
-			// printf("\t\tx=%d\n", x);
 
-			#if DATA
+			#if DATA_COLLECT_MODE==1 || DATA_COLLECT_MODE==2
 				RgbImage* result = shrink(pxls, x, y, window, window, DEFSIZE, DEFSIZE);
 			#endif
 
@@ -301,27 +307,26 @@ void detectSingleScale(RgbImage* pxls, RgbImage* integral, RgbImage* integralsq,
 				}
 
 				if (stagePassThresh < classifier->stages[i].threshold) {
-					#if DATA
+					#if DATA_COLLECT_MODE==1
 						int r = rand() % DRAW_PROB;
 						if (DRAW_PROB==1 || r == DRAW_PROB-1) {
-							#if COMMON_DUMP==1
-								printPix(result, fp_all, 0);
-							#else
-								printPix(result, fp_neg, -1);
-							#endif //COMMON_DUMP
+							printPix(result, fp_all, 0);
 						}
-					#endif //DATA
+					#elif DATA_COLLECT_MODE==2
+						int r = rand() % DRAW_PROB;
+						if (DRAW_PROB==1 || r == DRAW_PROB-1) {
+							printPix(result, fp_neg, -1);
+						}
+					#endif //DATA_COLLECT_MODE
 					break;
 				}
 
 				if ( i + 1 == classifier->stgNum) {
-					#if DATA
-						#if COMMON_DUMP==1
-							printPix(result, fp_all, 1);
-						#else
-							printPix(result, fp_pos, -1);
-						#endif //COMMON_DUMP
-					#endif
+					#if DATA_COLLECT_MODE==1
+						printPix(result, fp_all, 1);
+					#elif DATA_COLLECT_MODE==2
+						printPix(result, fp_pos, -1);
+					#endif //DATA_COLLECT_MODE
 					#if VERSION == 0
 						head = push(head, window, x, y);
 					#elif VERSION == 1
@@ -331,18 +336,20 @@ void detectSingleScale(RgbImage* pxls, RgbImage* integral, RgbImage* integralsq,
 				}
 			}
 
-			#if DATA
+			#if DATA_COLLECT_MODE==1 || DATA_COLLECT_MODE==2
 				freeRgbImage(result);
-			#endif
+			#endif //DATA_COLLECT_MODE
+
+			invocCount ++;
 		}
 	}
 
-	#if COMMON_DUMP==1
+	#if DATA_COLLECT_MODE==1 || DATA_COLLECT_MODE==3
 		fclose(fp_all);
-	#else
+	#elif DATA_COLLECT_MODE==2
 		fclose(fp_pos);
 		fclose(fp_neg);
-	#endif //COMMON_DUMP
+	#endif //DATA_COLLECT_MODE
 }
 
 /** Using FANN approximate detectSingleScale
@@ -354,14 +361,19 @@ void detectSingleScaleApprox(struct fann *ann, RgbImage* pxls, int window) {
 	int width = pxls->w;
 	int height = pxls->h;
 
+	printf("window=%d width=%d height=%d invocs=%d\n", window, width, height, invocCount);
+
 	fann_type input[DEFSIZE * DEFSIZE];
 	float *calc_out;
+	int i, j;
 	int s;
+	int y, x;
+	int y_step_size, x_step_size;
 
-#if COMMON_DUMP==1
+#if DATA_COLLECT_MODE==1 || DATA_COLLECT_MODE==3
 	FILE* fp_all = fopen(dataFileName, "a");
 	assert(fp_all && "Could not open data file!");
-#else
+#elif DATA_COLLECT_MODE==2
 	char filePath_pos[256];
 	char filePath_neg[256];
 	strcpy(filePath_pos, dataFileName);
@@ -371,45 +383,54 @@ void detectSingleScaleApprox(struct fann *ann, RgbImage* pxls, int window) {
 	FILE* fp_pos = fopen(filePath_pos, "a");
 	FILE* fp_neg = fopen(filePath_neg, "a");
 	assert(fp_neg && fp_pos && "Could not open data files!");
-#endif //COMMON_DUMP
+#endif //DATA_COLLECT_MODE
 
-	int y, x;
-	for (y = 0; y < height - window; y++) {
-		for (x = 0; x < width - window; x++) {
+#if ADAPTIVE_STEP
+	y_step_size = (int) (window*(float)Y_STEP_SIZE/DEFSIZE);
+	x_step_size = (int) (window*(float)X_STEP_SIZE/DEFSIZE);
+#else
+	y_step_size = Y_STEP_SIZE;
+	x_step_size = X_STEP_SIZE;
+#endif //ADAPTIVE_STEP
+
+	//slide the window along the y axis by Y_STEP_SIZE
+	for (y = 0; y < height - window; y += y_step_size) {
+		//slide the window along the x axis by X_STEP_SIZE
+		for (x = 0; x < width - window; x += x_step_size) {
 			RgbImage* result = shrink(pxls, x, y, window, window, DEFSIZE, DEFSIZE);
 
 			if(result == NULL) {
-				return;
+				assert(NULL);
 			}
 
-			int i;
-
-			for(i = 0; i < DEFSIZE * DEFSIZE; i++) {
-				input[i] = result->pixels[i / DEFSIZE][i % DEFSIZE].r / 255.0;
+			for (i = 0; i < DEFSIZE; i++) {
+				for (j = 0; j < DEFSIZE; j++) {
+					input[i*DEFSIZE+j] = result->pixels[i][j].r / 255.0;
+				}
 			}
 
 			calc_out = fann_run(ann, input);
 
 			s = calc_out[0] > 0.5 ? 1 : 0;
 
-			#if DATA
-				#if COMMON_DUMP==1
-					printPix(result, fp_all, s);
-				#else
-					if (s==1)
-						printPix(result, fp_pos, -1);
-					else
-						printPix(result, fp_neg, -1);
-				#endif //COMMON_DUMP
-			#endif
+			#if DATA_COLLECT_MODE==1
+				printPix(result, fp_all, s);
+			#elif DATA_COLLECT_MODE==2
+				if (s==1)
+					printPix(result, fp_pos, -1);
+				else
+					printPix(result, fp_neg, -1);
+			#endif //DATA_COLLECT_MODE
 
 			if(s == 1) {
 				head = push(head, window, x, y);
-			} else {
-				break;
+				count++;
 			}
 
-			freeRgbImage(result);
+			#if DATA_COLLECT_MODE==1 || DATA_COLLECT_MODE==2
+				freeRgbImage(result);
+			#endif
+			invocCount ++;
 		}
 	}
 }
@@ -468,9 +489,15 @@ void detectMultiScale(RgbImage* pxls, Cascade* classifier) {
 		while (diff > 0) {
 			diff = mergeRectangles();
 		}
-		printfree(head);
-		printf("Total faces = %d!\n", count);
 	#endif
+
+	#if DATA_COLLECT_MODE==3
+		FILE* fp_all = fopen(dataFileName, "a");
+		printfree(head, fp_all);
+	#else
+		printfree(head, NULL);
+	#endif
+	printf("Total faces = %d!\n", count);
 }
 
 /** Initiating detectSingleScaleApprox with
@@ -490,10 +517,9 @@ void detectMultiScaleApprox(RgbImage* pxls, struct fann* ann) {
 	}
 	float scale = 1.0;
 	while (window < max_window) {
+		detectSingleScaleApprox(ann, pxls, (int)window);
 		window = window * SCALE_FACTOR;
 		scale = scale * SCALE_FACTOR;
-
-		detectSingleScaleApprox(ann, pxls, (int)window);
 
 	}
 	freeRgbImage(integral);
@@ -506,9 +532,15 @@ void detectMultiScaleApprox(RgbImage* pxls, struct fann* ann) {
 		while (diff > 0) {
 			diff = mergeRectangles();
 		}
-		printfree(head);
-		printf("Total faces = %d!\n", count);
 	#endif
+
+	#if DATA_COLLECT_MODE==3
+		FILE* fp_all = fopen(dataFileName, "a");
+		printfree(head, fp_all);
+	#else
+		printfree(head, NULL);
+	#endif
+	printf("Total faces = %d!\n", count);
 
 }
 
@@ -551,7 +583,7 @@ void detectApprox(struct fann* ann, char* filename) {
 int main(int argc, char **argv) {
 	srand(1);
 
-	#if DATA
+	#if DATA_COLLECT_MODE
 		if (argc != 4) {
 			printf("Usage: %s FILENAME CLASSIFIER OUTPUT_FILE\n", argv[0]);
 			return -1;
@@ -563,7 +595,7 @@ int main(int argc, char **argv) {
 		}
 	#endif
 
-	#if DATA
+	#if DATA_COLLECT_MODE
 		dataFileName = argv[3];
 	#endif
 	int ann_mode, vj_mode;
@@ -587,6 +619,8 @@ int main(int argc, char **argv) {
 	} else {
 		printf("Classifier not recognized.\n");
 	}
+
+	printf("Incoc. Count: %d\n", invocCount);
 
 	return 0;
 

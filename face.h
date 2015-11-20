@@ -26,7 +26,7 @@ bool overlap(Face* rect1, Face* rect2);
 
 Face* deleteNext(Face* node);
 
-void printfree(Face* head);
+void printfree(Face* head, FILE* fp);
 
 
 #endif
