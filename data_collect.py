@@ -14,6 +14,8 @@ ERROR_MODE=3
 LOG_FILE = "data_collect.log"
 DATA_FILE = "out.data"
 OCV_CASCADE="xml/ocv_clsfr.xml"
+TEST_FILE = "test_faces.out"
+REF_FILE = "ref_faces.out"
 
 def shell(command, cwd=None, shell=False):
     return subprocess.check_output(
@@ -79,10 +81,12 @@ def test(path, outfile, window, testClassifier):
         "false_neg": 0,
     }
 
+    refFaceData = ""
+    testFaceData = ""
+
     # Temporary directory for temporary files
     try:
         rgbDir = tempfile.mkdtemp()+'/'
-        # rgbDir = './'
         logging.debug('New directory created: {}'.format(rgbDir))
 
         trainingSamples = []
@@ -122,6 +126,15 @@ def test(path, outfile, window, testClassifier):
                 stats["true_pos"] += statistics["true_pos"]
                 stats["false_pos"] += statistics["false_pos"]
                 stats["false_neg"] += statistics["false_neg"]
+                refFaceData += "=="+os.path.basename(jpeg)+"==\n"
+                for idx, face in enumerate(origFaces):
+                    refFaceData +="{}: {}, {}, {}, {}\n".format(idx, face[0], face[1], face[2], face[3])
+                refFaceData += "\n"
+                testFaceData += "=="+os.path.basename(jpeg)+"==\n"
+                for idx, face in enumerate(testFaces):
+                    testFaceData +="{}: {}, {}, {}, {}\n".format(idx, face[0], face[1], face[2], face[3])
+                testFaceData += "\n"
+
 
             if ERROR_MODE==1:
                 # Read in data files
@@ -162,6 +175,11 @@ def test(path, outfile, window, testClassifier):
             # Cleanup files
             os.remove(origFile)
             os.remove(testFile)
+
+        with open(REF_FILE, 'w') as f:
+            f.write(refFaceData)
+        with open(TEST_FILE, 'w') as f:
+            f.write(testFaceData)
 
         # Print stats
         if ((stats["true_pos"]+stats["false_pos"])>0):
