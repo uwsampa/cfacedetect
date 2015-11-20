@@ -13,6 +13,14 @@ typedef struct Rect{
 	int weight;
 }Rect;
 
+// Feature
+typedef struct Feature{
+	// Number of rectangles
+	int rectNum;
+	// List of rectList
+	Rect rectList[3];
+}Feature;
+
 // Node struct (weak classifier)
 typedef struct Node{
 	// threshold of the weak classifier

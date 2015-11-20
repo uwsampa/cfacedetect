@@ -18,45 +18,35 @@
   */
 #define VERSION 0
 
-
 /** Turns on adaptive step for the algorithm
   * false: Adaptive step disabled (ver. 0 only)
   * true: Adaptive step enabled (ver. 0 only)
   */
-#define ADAPTIVE_STEP false
-
-
-/// Turns on FANN evaluation
-#define APPROX false
+#define ADAPTIVE_STEP true
 
 /// Turns on merging when collecting results
-#define MERGE true
+#define MERGE false
 
 ///Turns on debugging information
 #define DEBUG false
 
 /// Turns on data collection
 #define DATA true
+#define COMMON_DUMP 1
 
 // Inverse probability of recording a
 // negative sample (balances-out the
 // negative vs. positive count)
-#define DRAW_PROB 100
+#define DRAW_PROB 1
 
 /// Default data output path
 #define DATA_FN "train"
 
-/// HAAR cascade file path
-#define CASCADE "xml/ocv_clsfr.xml"
-
-/// Input picture file path (when no input image specified)
-#define INPIC "albert.rgb"
-
-/// FANN file path
-#define NN "vision_3L_36N.net"
-
-/// Defined window size
+/// Defined ANN window size
 #define DEFSIZE 20
+
+/// Classifier Window
+#define CLASSDIM 20
 
 /// Window scaling factor
 #define SCALE_FACTOR 1.25
@@ -66,9 +56,6 @@
 
 /// Window step size along X
 #define X_STEP_SIZE 1 /// window step size along X step
-
-///Common output file
-#define COMMON_DUMP false
 
 /// head of list of faces found
 Face* head = NULL;
@@ -240,7 +227,7 @@ void detectSingleScale(RgbImage* pxls, RgbImage* integral, RgbImage* integralsq,
 	int area = window * window;
 	int y, x;
 
-#ifdef COMMON_DUMP
+#if COMMON_DUMP==1
 	FILE* fp_all = fopen(dataFileName, "a");
 	assert(fp_all && "Could not open data file!");
 #else
@@ -272,9 +259,10 @@ void detectSingleScale(RgbImage* pxls, RgbImage* integral, RgbImage* integralsq,
 
 	//slide the window along the y axis by Y_STEP_SIZE
 	for (y = 0; y < height - window; y += y_step_size) {
+		// printf("\ty=%d\n", y);
 		//slide the window along the x axis by X_STEP_SIZE
 		for (x = 0; x < width - window; x += x_step_size) {
-
+			// printf("\t\tx=%d\n", x);
 
 			#if DATA
 				RgbImage* result = shrink(pxls, x, y, window, window, DEFSIZE, DEFSIZE);
@@ -316,7 +304,7 @@ void detectSingleScale(RgbImage* pxls, RgbImage* integral, RgbImage* integralsq,
 					#if DATA
 						int r = rand() % DRAW_PROB;
 						if (DRAW_PROB==1 || r == DRAW_PROB-1) {
-							#ifdef COMMON_DUMP
+							#if COMMON_DUMP==1
 								printPix(result, fp_all, 0);
 							#else
 								printPix(result, fp_neg, -1);
@@ -328,7 +316,7 @@ void detectSingleScale(RgbImage* pxls, RgbImage* integral, RgbImage* integralsq,
 
 				if ( i + 1 == classifier->stgNum) {
 					#if DATA
-						#ifdef COMMON_DUMP
+						#if COMMON_DUMP==1
 							printPix(result, fp_all, 1);
 						#else
 							printPix(result, fp_pos, -1);
@@ -349,12 +337,12 @@ void detectSingleScale(RgbImage* pxls, RgbImage* integral, RgbImage* integralsq,
 		}
 	}
 
-	#ifdef COMMON_DUMP
+	#if COMMON_DUMP==1
 		fclose(fp_all);
 	#else
 		fclose(fp_pos);
 		fclose(fp_neg);
-	#endif
+	#endif //COMMON_DUMP
 }
 
 /** Using FANN approximate detectSingleScale
@@ -362,13 +350,28 @@ void detectSingleScale(RgbImage* pxls, RgbImage* integral, RgbImage* integralsq,
   * @param[in] pxls input RgbImage
   * @param[in] window window size scanning the image
   */
-void approxDetectSingleScale(struct fann *ann, RgbImage* pxls, int window) {
+void detectSingleScaleApprox(struct fann *ann, RgbImage* pxls, int window) {
 	int width = pxls->w;
 	int height = pxls->h;
 
 	fann_type input[DEFSIZE * DEFSIZE];
 	float *calc_out;
 	int s;
+
+#if COMMON_DUMP==1
+	FILE* fp_all = fopen(dataFileName, "a");
+	assert(fp_all && "Could not open data file!");
+#else
+	char filePath_pos[256];
+	char filePath_neg[256];
+	strcpy(filePath_pos, dataFileName);
+	strcpy(filePath_neg, dataFileName);
+	strcat(filePath_pos, ".pos.data");
+	strcat(filePath_neg, ".neg.data");
+	FILE* fp_pos = fopen(filePath_pos, "a");
+	FILE* fp_neg = fopen(filePath_neg, "a");
+	assert(fp_neg && fp_pos && "Could not open data files!");
+#endif //COMMON_DUMP
 
 	int y, x;
 	for (y = 0; y < height - window; y++) {
@@ -389,6 +392,17 @@ void approxDetectSingleScale(struct fann *ann, RgbImage* pxls, int window) {
 
 			s = calc_out[0] > 0.5 ? 1 : 0;
 
+			#if DATA
+				#if COMMON_DUMP==1
+					printPix(result, fp_all, s);
+				#else
+					if (s==1)
+						printPix(result, fp_pos, -1);
+					else
+						printPix(result, fp_neg, -1);
+				#endif //COMMON_DUMP
+			#endif
+
 			if(s == 1) {
 				head = push(head, window, x, y);
 			} else {
@@ -400,7 +414,7 @@ void approxDetectSingleScale(struct fann *ann, RgbImage* pxls, int window) {
 	}
 }
 
-/** Initiating detectSingleScale/approxDetectSingleScale with
+/** Initiating detectSingleScale with
   * increased window size and scaled features scanning through
   * the image
   * @param[in] pxls input RgbImage
@@ -408,41 +422,24 @@ void approxDetectSingleScale(struct fann *ann, RgbImage* pxls, int window) {
   */
 void detectMultiScale(RgbImage* pxls, Cascade* classifier) {
 	int max_window = min(pxls->w, pxls->h);
-	float window = classifier->dim;
+	float window = classifier->dim > CLASSDIM ? classifier->dim : CLASSDIM;
+
+	// assert(window==CLASSDIM && "Classifier Window Mismatch!");
 
 	#if VERSION == 0
-
-		#if APPROX
-			struct fann *ann;
-			printf("Approximating.\n");
-			ann = fann_create_from_file(NN);
-		#else
-			RgbImage* integral = integralImage(pxls, 0);
-			RgbImage* integralsq = integralImage(pxls, 1);
-			if(integral == NULL || integralsq == NULL) {
-				return;
-			}
-		#endif
-
+		RgbImage* integral = integralImage(pxls, 0);
+		RgbImage* integralsq = integralImage(pxls, 1);
+		if(integral == NULL || integralsq == NULL) {
+			return;
+		}
 		float scale = 1.0;
-
 		while (window < max_window) {
+			detectSingleScale(pxls, integral, integralsq, classifier, (int)window, scale);
 			window = window * SCALE_FACTOR;
 			scale = scale * SCALE_FACTOR;
-
-			#if APPROX
-				approxDetectSingleScale(ann, pxls, (int)window);
-			#else
-				detectSingleScale(pxls, integral, integralsq, classifier, (int)window, scale);
-			#endif
 		}
-
-		#if APPROX
-			fann_destroy(ann);
-		#else
-			freeRgbImage(integral);
-			freeRgbImage(integralsq);
-		#endif
+		freeRgbImage(integral);
+		freeRgbImage(integralsq);
 
 	#elif VERSION == 1
 		int shrinkWidth = pxls->w;
@@ -462,7 +459,7 @@ void detectMultiScale(RgbImage* pxls, Cascade* classifier) {
 			freeRgbImage(integral);
 			freeRgbImage(integralsq);
 		}
-	#endif //VERSION == 1
+	#endif //VERSION
 
 	printf("Detected = %d!\n", count);
 
@@ -471,13 +468,51 @@ void detectMultiScale(RgbImage* pxls, Cascade* classifier) {
 		while (diff > 0) {
 			diff = mergeRectangles();
 		}
+		printfree(head);
+		printf("Total faces = %d!\n", count);
 	#endif
-
-	printfree(head);
-	printf("Total faces = %d!\n", count);
 }
 
-/** Detects and prints faces coordinates from filename image
+/** Initiating detectSingleScaleApprox with
+  * increased window size and scaled features scanning through
+  * the image
+  * @param[in] pxls input RgbImage
+  * @param[in] ann the fann neural network
+  */
+void detectMultiScaleApprox(RgbImage* pxls, struct fann* ann) {
+	int max_window = min(pxls->w, pxls->h);
+	float window = CLASSDIM;
+
+	RgbImage* integral = integralImage(pxls, 0);
+	RgbImage* integralsq = integralImage(pxls, 1);
+	if(integral == NULL || integralsq == NULL) {
+		return;
+	}
+	float scale = 1.0;
+	while (window < max_window) {
+		window = window * SCALE_FACTOR;
+		scale = scale * SCALE_FACTOR;
+
+		detectSingleScaleApprox(ann, pxls, (int)window);
+
+	}
+	freeRgbImage(integral);
+	freeRgbImage(integralsq);
+
+	printf("Detected = %d!\n", count);
+
+	#if MERGE
+		int diff = 1;
+		while (diff > 0) {
+			diff = mergeRectangles();
+		}
+		printfree(head);
+		printf("Total faces = %d!\n", count);
+	#endif
+
+}
+
+/** Detects and prints faces coordinates from filename image using cascade
   * @param[in][in] classifier the haar classifier
   * @param[in][in] filename the input file
   */
@@ -495,30 +530,63 @@ void detect(Cascade* classifier, char* filename) {
 	freeRgbImage(&srcImage);
 }
 
+/** Detects and prints faces coordinates from filename image using ANN
+  * @param[in][in] ann fann neural network classifier
+  * @param[in][in] filename the input file
+  */
+void detectApprox(struct fann* ann, char* filename) {
+	RgbImage srcImage;
+
+	initRgbImage(&srcImage);
+
+	loadRgbImage(filename, &srcImage);
+
+	grayscale(&srcImage);
+
+	detectMultiScaleApprox(&srcImage, ann);
+
+	freeRgbImage(&srcImage);
+}
+
 int main(int argc, char **argv) {
 	srand(1);
 
 	#if DATA
 		if (argc != 4) {
-			printf("Usage: %s FILENAME CASCADE OUTPUT_FILE\n", argv[0]);
-		} else {
-			dataFileName = argv[3];
-			Cascade* classifier = loadCascade(argv[2]);
-			if (classifier) {
-				detect(classifier, argv[1]);
-			}
-			freeCascade(classifier);
+			printf("Usage: %s FILENAME CLASSIFIER OUTPUT_FILE\n", argv[0]);
+			return -1;
 		}
 	#else
 		if (argc != 3) {
 			printf("Usage: %s FILENAME CASCADE\n", argv[0]);
-			Cascade* classifier = loadCascade(argv[2]);
-			if (classifier) {
-				detect(classifier, argv[1]);
-			}
-			freeCascade(classifier);
+			return -1;
 		}
 	#endif
+
+	#if DATA
+		dataFileName = argv[3];
+	#endif
+	int ann_mode, vj_mode;
+	char *p = strrchr(argv[2], '.');
+	ann_mode = p ? (strcmp(p, ".nn") == 0) : 0;
+	vj_mode = p ? (strcmp(p, ".xml") == 0) : 0;
+	if (ann_mode) {
+		printf("ANN Mode.\n");
+		struct fann *ann = fann_create_from_file(argv[2]);
+		if (ann) {
+			detectApprox(ann, argv[1]);
+		}
+		fann_destroy(ann);
+	} else if (vj_mode) {
+		printf("VJ Mode.\n");
+		Cascade* classifier = loadCascade(argv[2]);
+		if (classifier) {
+			detect(classifier, argv[1]);
+		}
+		freeCascade(classifier);
+	} else {
+		printf("Classifier not recognized.\n");
+	}
 
 	return 0;
 

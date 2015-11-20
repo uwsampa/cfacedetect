@@ -22,32 +22,49 @@ def shell(command, cwd=None, shell=False):
         shell=shell,
     )
 
+# def jpgToRgb(inPath, outPath):
+#     jpg = Image.open(inPath)
+#     pix = jpg.load()
+#     rgb = open(outPath, "w")
+
+#     rgb.write(str(jpg.size[0]) + "," + str(jpg.size[1]) + "\n")
+
+#     for y in range(0, jpg.size[1]):
+#         rgb.write(str(pix[0, y][0]) + "," + str(pix[0, y][1]) + "," + str(pix[0, y][2]))
+#         for x in range(1, jpg.size[0]):
+#             rgb.write("," + str(pix[x, y][0]) + "," + str(pix[x, y][1]) + "," + str(pix[x, y][2]))
+#         rgb.write("\n")
+
 def jpgToRgb(inPath, outPath):
     jpg = Image.open(inPath)
     pix = jpg.load()
     rgb = open(outPath, "w")
-
     rgb.write(str(jpg.size[0]) + "," + str(jpg.size[1]) + "\n")
 
-    for y in range(0, jpg.size[1]):
-        rgb.write(str(pix[0, y][0]) + "," + str(pix[0, y][1]) + "," + str(pix[0, y][2]))
-        for x in range(1, jpg.size[0]):
-            rgb.write("," + str(pix[x, y][0]) + "," + str(pix[x, y][1]) + "," + str(pix[x, y][2]))
-        rgb.write("\n")
+    if jpg.mode == 'L':
+        for y in range(0, jpg.size[1]):
+            rgb.write(str(pix[0, y]) + "," + str(pix[0, y]) + "," + str(pix[0, y]))
+            for x in range(1, jpg.size[0]):
+                rgb.write("," + str(pix[x, y]) + "," + str(pix[x, y]) + "," + str(pix[x, y]))
+            rgb.write("\n")
+    else:
+        for y in range(0, jpg.size[1]):
+            rgb.write(str(pix[0, y][0]) + "," + str(pix[0, y][1]) + "," + str(pix[0, y][2]))
+            for x in range(1, jpg.size[0]):
+                rgb.write("," + str(pix[x, y][0]) + "," + str(pix[x, y][1]) + "," + str(pix[x, y][2]))
+            rgb.write("\n")
 
 def compileExecutable(window):
-    try:
-        shell(["make","clean"])
-        defineStr = "DEFINES=\"-DDEFSIZE="+str(window)
-        defineStr += " -DCOMMON_DUMP"
-        defineStr += " -DDRAW_PROB=1"
-        defineStr += "\""
-        shell(["make", defineStr])
-    except:
-        logging.error('Compiling face detection program failed')
-        exit()
+    defineStr = "DEFINES=\"-DDEFSIZE="+str(window)
+    defineStr += " -DCOMMON_DUMP=1"
+    defineStr += " -DDRAW_PROB=1"
+    defineStr += "\""
+    print defineStr
+    shell(["make", "clean"])
+    shell(["make", defineStr])
 
-def test(path, outfile, window, testCascade):
+
+def test(path, outfile, window, testClassifier):
 
     # Collect input sources
     jpegs = []
@@ -93,6 +110,7 @@ def test(path, outfile, window, testCascade):
             testFile = rgbDir+os.path.splitext(os.path.basename(rgb))[0]+'_test'
             # Collect original labels
             try:
+                shell(["make", "clean"])
                 compileExecutable(window)
                 logging.debug('Running face detection and data collection on {} with original cascade'.format(origFile))
                 shell(["./detect", rgb, OCV_CASCADE, origFile])
@@ -103,9 +121,10 @@ def test(path, outfile, window, testCascade):
             origData = process(origFile)
             # Collect test labels
             try:
+                shell(["make", "clean"])
                 compileExecutable(window)
-                logging.debug('Running face detection and data collection on {} with test cascade {}'.format(testFile, testCascade))
-                shell(["./detect", rgb, testCascade, testFile])
+                logging.debug('Running face detection and data collection on {} with test cascade {}'.format(testFile, testClassifier))
+                shell(["./detect", rgb, testClassifier, testFile])
             except:
                 logging.error('Face detection on {} failed'.format(rgb))
                 exit()
@@ -149,8 +168,14 @@ def test(path, outfile, window, testCascade):
             os.remove(testFile)
 
         # Print stats
-        precision = float(stats["true_pos"])/(stats["true_pos"]+stats["false_pos"])
-        recall = float(stats["true_pos"])/(stats["true_pos"]+stats["false_neg"])
+        if ((stats["true_pos"]+stats["false_pos"])>0):
+            precision = float(stats["true_pos"])/(stats["true_pos"]+stats["false_pos"])
+        else:
+            precision = -1
+        if (stats["true_pos"]+stats["false_neg"]):
+            recall = float(stats["true_pos"])/(stats["true_pos"]+stats["false_neg"])
+        else:
+            recall = -1
         logging.info("Raw stats = {}".format(stats))
         logging.info("Precision = {}".format(precision))
         logging.info("Recall = {}".format(recall))
@@ -328,7 +353,7 @@ def cli():
         default=False, help='process all files in dataset and pick random subset (extends runtime)'
     )
     parser.add_argument(
-        '-testCascade', dest='testCascade', action='store', required=False,
+        '-testClassifier', dest='testClassifier', action='store', required=False,
         default=None, help='path to cascade to test'
     )
     args = parser.parse_args()
@@ -350,8 +375,8 @@ def cli():
     else:
         rootLogger.setLevel(logging.INFO)
 
-    if (args.testCascade!=None):
-        test(args.imdir, args.outfile, args.window, args.testCascade)
+    if (args.testClassifier!=None):
+        test(args.imdir, args.outfile, args.window, args.testClassifier)
     else:
         collect(args.imdir, args.outfile, args.window, args.size, args.pRatio, args.extensive)
 
