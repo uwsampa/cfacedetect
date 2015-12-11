@@ -246,11 +246,11 @@ def collect(path, outfile, window, size, pRatio, extensive=False):
             jpgToRgb(jpeg, rgb)
             logging.debug('Conversion successful: {}'.format(rgb))
 
-            # Now perform neural network training
-            testFile = rgbDir+os.path.splitext(os.path.basename(rgb))[0]
+            # Now run Viola Jones for data collection
+            dataFile = rgbDir+os.path.splitext(os.path.basename(rgb))[0]
             try:
                 logging.debug('Running face detection and data collection on {}'.format(dataFile))
-                shell(["./detect", rgb, OCV_CASCADE,dataFile])
+                shell(["./detect", rgb, OCV_CASCADE, dataFile])
             except:
                 logging.error('Face detection on {} failed'.format(rgb))
                 exit()
